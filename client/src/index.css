@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* LIGHT MODE - Ayurvedic Earth Tones */
+/* LIGHT MODE - Warm Ayurvedic Theme */
 :root {
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
@@ -14,54 +14,62 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 45 30% 97%;
+  --background: 40 30% 97%;
   --foreground: 25 25% 15%;
-  --border: 35 20% 85%;
+  --border: 35 20% 88%;
 
-  --card: 40 25% 99%;
+  --card: 40 30% 99%;
   --card-foreground: 25 25% 15%;
-  --card-border: 35 15% 88%;
+  --card-border: 35 15% 90%;
 
   --sidebar: 38 35% 95%;
   --sidebar-foreground: 25 25% 20%;
   --sidebar-border: 35 20% 88%;
-  --sidebar-primary: 142 45% 35%;
+  --sidebar-primary: 16 60% 45%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 35 40% 90%;
   --sidebar-accent-foreground: 25 25% 20%;
-  --sidebar-ring: 142 45% 35%;
+  --sidebar-ring: 16 60% 45%;
 
-  --popover: 40 25% 99%;
+  --popover: 40 30% 99%;
   --popover-foreground: 25 25% 15%;
-  --popover-border: 35 15% 88%;
+  --popover-border: 35 15% 90%;
 
-  --primary: 142 50% 32%;
+  /* Terracotta primary - warm brown/orange from reference */
+  --primary: 16 55% 42%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 35 35% 92%;
+  --secondary: 35 35% 94%;
   --secondary-foreground: 25 30% 25%;
 
-  --muted: 38 20% 93%;
+  --muted: 38 25% 94%;
   --muted-foreground: 25 15% 45%;
 
-  --accent: 28 60% 55%;
+  /* Orange accent */
+  --accent: 28 80% 52%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 35 20% 82%;
-  --ring: 142 50% 32%;
-  --chart-1: 142 50% 35%;
-  --chart-2: 28 60% 55%;
-  --chart-3: 200 55% 50%;
-  --chart-4: 35 45% 50%;
-  --chart-5: 320 45% 45%;
+  --input: 35 20% 85%;
+  --ring: 16 55% 42%;
+  
+  /* Dosha colors */
+  --vata: 210 70% 50%;
+  --pitta: 0 70% 55%;
+  --kapha: 142 55% 40%;
+  
+  --chart-1: 16 55% 42%;
+  --chart-2: 28 80% 52%;
+  --chart-3: 210 70% 50%;
+  --chart-4: 0 70% 55%;
+  --chart-5: 142 55% 40%;
 
   --font-sans: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --font-serif: 'Playfair Display', Georgia, serif;
   --font-mono: 'JetBrains Mono', Menlo, monospace;
-  --radius: .5rem;
+  --radius: .625rem;
   --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0, 0.03);
   --shadow-xs: 0px 1px 3px 0px rgba(0,0,0, 0.05);
   --shadow-sm: 0px 2px 4px 0px rgba(0,0,0, 0.05), 0px 1px 2px -1px rgba(0,0,0, 0.03);
@@ -116,18 +124,18 @@
   --sidebar: 25 20% 10%;
   --sidebar-foreground: 40 15% 88%;
   --sidebar-border: 30 12% 18%;
-  --sidebar-primary: 142 50% 45%;
+  --sidebar-primary: 16 60% 50%;
   --sidebar-primary-foreground: 25 20% 8%;
   --sidebar-accent: 30 20% 18%;
   --sidebar-accent-foreground: 40 15% 88%;
-  --sidebar-ring: 142 50% 45%;
+  --sidebar-ring: 16 60% 50%;
 
   --popover: 28 18% 12%;
   --popover-foreground: 40 20% 92%;
   --popover-border: 30 12% 22%;
 
-  --primary: 142 55% 45%;
-  --primary-foreground: 25 20% 8%;
+  --primary: 16 60% 50%;
+  --primary-foreground: 0 0% 100%;
 
   --secondary: 30 18% 18%;
   --secondary-foreground: 40 18% 88%;
@@ -135,19 +143,24 @@
   --muted: 28 15% 16%;
   --muted-foreground: 35 12% 55%;
 
-  --accent: 28 65% 50%;
+  --accent: 28 70% 55%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 65% 55%;
   --destructive-foreground: 0 0% 100%;
 
   --input: 30 15% 25%;
-  --ring: 142 55% 45%;
-  --chart-1: 142 55% 50%;
-  --chart-2: 28 65% 55%;
-  --chart-3: 200 60% 55%;
-  --chart-4: 35 50% 55%;
-  --chart-5: 320 50% 55%;
+  --ring: 16 60% 50%;
+  
+  --vata: 210 70% 55%;
+  --pitta: 0 65% 58%;
+  --kapha: 142 55% 45%;
+  
+  --chart-1: 16 60% 55%;
+  --chart-2: 28 70% 58%;
+  --chart-3: 210 70% 55%;
+  --chart-4: 0 65% 58%;
+  --chart-5: 142 55% 50%;
 
   --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0, 0.15);
   --shadow-xs: 0px 1px 3px 0px rgba(0,0,0, 0.20);
@@ -169,25 +182,107 @@
   }
 }
 
+/* Gradient backgrounds */
+.gradient-terracotta {
+  background: linear-gradient(135deg, hsl(16 55% 42%) 0%, hsl(25 60% 35%) 100%);
+}
+
+.gradient-terracotta-dark {
+  background: linear-gradient(135deg, hsl(16 60% 50%) 0%, hsl(25 65% 40%) 100%);
+}
+
+/* Action button styles matching reference */
+.action-btn {
+  @apply flex flex-col items-center justify-center gap-2 p-4 rounded-xl transition-colors duration-200;
+}
+
+/* Dosha progress bars */
+.dosha-bar {
+  @apply h-2 rounded-full transition-all duration-500 ease-out;
+}
+
+.dosha-bar-vata {
+  background: linear-gradient(90deg, hsl(210 70% 50%) 0%, hsl(210 70% 60%) 100%);
+}
+
+.dosha-bar-pitta {
+  background: linear-gradient(90deg, hsl(0 70% 55%) 0%, hsl(0 70% 65%) 100%);
+}
+
+.dosha-bar-kapha {
+  background: linear-gradient(90deg, hsl(142 55% 40%) 0%, hsl(142 55% 50%) 100%);
+}
+
+/* Plan item styles */
+.plan-item {
+  @apply flex items-center gap-4 p-4 bg-card rounded-xl border border-border transition-colors duration-200;
+}
+
+/* Bottom navigation */
+.bottom-nav {
+  @apply fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border z-50;
+}
+
+.nav-item {
+  @apply flex flex-col items-center gap-1 py-2 px-4 text-muted-foreground transition-colors;
+}
+
+.nav-item.active {
+  @apply text-primary;
+}
+
+/* Wellness score ring */
+.wellness-ring {
+  stroke-dasharray: 251.2;
+  stroke-dashoffset: calc(251.2 - (251.2 * var(--progress, 0)) / 100);
+  transition: stroke-dashoffset 1s ease-out;
+}
+
+/* Alert box */
+.alert-box {
+  @apply flex items-start gap-3 p-4 rounded-xl border;
+}
+
+.alert-box-warning {
+  @apply bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800/50;
+}
+
+/* Skeleton loading */
+.skeleton {
+  @apply animate-pulse bg-muted rounded;
+}
+
+/* Smooth transitions */
+.smooth-appear {
+  animation: smoothAppear 0.3s ease-out forwards;
+}
+
+@keyframes smoothAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger children animations */
+.stagger-children > * {
+  animation: smoothAppear 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+
 /**
  * Using the elevate system.
- * Automatic contrast adjustment.
- *
- * <element className="hover-elevate" />
- * <element className="active-elevate-2" />
- *
- * // Using the tailwind utility when a data attribute is "on"
- * <element className="toggle-elevate data-[state=on]:toggle-elevated" />
- * // Or manually controlling the toggle state
- * <element className="toggle-elevate toggle-elevated" />
- *
- * Elevation systems have to handle many states.
- * - not-hovered, vs. hovered vs. active  (three mutually exclusive states)
- * - toggled or not
- * - focused or not (this is not handled with these utilities)
- *
- * Even without handling focused or not, this is six possible combinations that
- * need to be distinguished from eachother visually.
  */
 @layer utilities {
 
@@ -203,42 +298,28 @@
     pointer-events: none;
   }
 
-  /* .no-default-hover-elevate/no-default-active-elevate is an escape hatch so consumers of
-   * buttons/badges can remove the automatic brightness adjustment on interactions
-   * and program their own. */
   .no-default-hover-elevate {}
 
   .no-default-active-elevate {}
 
-
-  /**
-   * Toggleable backgrounds go behind the content. Hoverable/active goes on top.
-   * This way they can stack/compound. Both will overlap the parent's borders!
-   * So borders will be automatically adjusted both on toggle, and hover/active,
-   * and they will be compounded.
-   */
   .toggle-elevate::before,
   .toggle-elevate-2::before {
     content: "";
     pointer-events: none;
     position: absolute;
     inset: 0px;
-    /*border-radius: inherit;   match rounded corners */
     border-radius: inherit;
     z-index: -1;
-    /* sits behind content but above backdrop */
   }
 
   .toggle-elevate.toggle-elevated::before {
     background-color: var(--elevate-2);
   }
 
-  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
   .border.toggle-elevate::before {
     inset: -1px;
   }
 
-  /* Does not work on elements with overflow:hidden! */
   .hover-elevate:not(.no-default-hover-elevate),
   .active-elevate:not(.no-default-active-elevate),
   .hover-elevate-2:not(.no-default-hover-elevate),
@@ -255,10 +336,8 @@
     pointer-events: none;
     position: absolute;
     inset: 0px;
-    /*border-radius: inherit;   match rounded corners */
     border-radius: inherit;
     z-index: 999;
-    /* sits in front of content */
   }
 
   .hover-elevate:hover:not(.no-default-hover-elevate)::after,
@@ -271,7 +350,6 @@
     background-color: var(--elevate-2);
   }
 
-  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
   .border.active-elevate:not(.no-active-interaction-elevate)::after,
   .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,

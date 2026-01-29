@@ -120,8 +120,8 @@ export default function Symptoms() {
     const colors = getDoshaColors(analysis.imbalancedDosha);
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 py-8 px-4">
-        <div className="container max-w-4xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 py-8 px-4 pb-24 md:pb-8">
+        <div className="container max-w-4xl mx-auto smooth-appear">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <Button variant="ghost" className="gap-2" onClick={resetAnalysis} data-testid="button-back">
@@ -249,8 +249,8 @@ export default function Symptoms() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 py-8 px-4">
-      <div className="container max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 py-8 px-4 pb-24 md:pb-8">
+      <div className="container max-w-4xl mx-auto smooth-appear">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <Link href="/">
