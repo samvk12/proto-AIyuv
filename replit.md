@@ -139,3 +139,11 @@ Frontend and backend are served on port 5000.
 - Built results page with health snapshot and preventive guidance
 - Updated landing page with new CTAs matching specification
 - Added Daily Preventive Care feature with 50+ personalized tips
+
+## UX Improvements (Jan 2026)
+- **Reduced Friction**: Consolidated 7 context steps into 2 pages (Profile + Lifestyle)
+- **Smart Defaults**: Pre-selected common values (Good sleep, Moderate stress, Light activity, Prevention goal)
+- **State Persistence**: Form data and current step saved to localStorage; "Continue where you left off?" prompt on return
+- **Auto-Advance Quiz**: Quiz questions auto-advance after 400ms when option selected
+- **Loading Feedback**: Skeleton loaders and animated spinners during API calls
+- **Logical Back Navigation**: Back button returns to logical previous step (not reset)
