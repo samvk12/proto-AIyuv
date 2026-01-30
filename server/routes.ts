@@ -2,7 +2,22 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { doshaDescriptions } from "@shared/quiz-data";
 import { getTipsForProfile, getGreeting, getFocusArea } from "@shared/preventive-tips";
-import { quizSubmissionSchema, symptomCheckSchema, type DoshaResult, type DoshaType, type SymptomAnalysis, type Remedy, type DailyPreventiveCare } from "@shared/schema";
+import { 
+  quizSubmissionSchema, 
+  symptomCheckSchema, 
+  createCaseRequestSchema,
+  type DoshaResult, 
+  type DoshaType, 
+  type SymptomAnalysis, 
+  type Remedy, 
+  type DailyPreventiveCare,
+  type HealthCheckCase,
+  type DiagnosisResult,
+  type PreventiveGuidance,
+  type UserContext,
+  type SymptomInput
+} from "@shared/schema";
+import { randomUUID } from "crypto";
 
 // Symptom to dosha mapping
 const symptomDoshaMapping: Record<number, DoshaType> = {
@@ -333,6 +348,265 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Preventive care error:", error);
       return res.status(500).json({ error: "Failed to generate preventive care tips" });
+    }
+  });
+
+  // ========================
+  // HEALTH CHECK FLOW ENDPOINTS
+  // ========================
+
+  // Dual diagnosis engine (stub with Ayurvedic rules + AI placeholder)
+  function runDiagnosisEngine(
+    userContext: UserContext, 
+    symptomInput: SymptomInput
+  ): { diagnosisResult: DiagnosisResult; preventiveGuidance: PreventiveGuidance } {
+    const { selectedSymptomIds, freeText } = symptomInput;
+    const { lifestyle, primaryGoal } = userContext;
+
+    // Calculate dosha imbalance from symptoms
+    const doshaCount = { vata: 0, pitta: 0, kapha: 0 };
+    selectedSymptomIds.forEach((symptomId) => {
+      const dosha = symptomDoshaMapping[symptomId];
+      if (dosha) {
+        doshaCount[dosha]++;
+      }
+    });
+
+    // Determine primary imbalanced dosha (vikriti)
+    const sorted = Object.entries(doshaCount).sort(([, a], [, b]) => b - a);
+    const vikriti = (sorted[0][1] > 0 ? sorted[0][0] : "vata") as DoshaType;
+    
+    // Prakriti is estimated from lifestyle (stub - would normally come from quiz)
+    let prakriti: DoshaType = "vata";
+    if (lifestyle.activityLevel === "active" && lifestyle.stressLevel !== "low") {
+      prakriti = "pitta";
+    } else if (lifestyle.activityLevel === "sedentary" && lifestyle.sleepQuality !== "poor") {
+      prakriti = "kapha";
+    }
+
+    // Calculate dosha balance percentages
+    const total = Math.max(selectedSymptomIds.length, 1);
+    const doshaBalance = {
+      vata: Math.round((doshaCount.vata / total) * 100) || 33,
+      pitta: Math.round((doshaCount.pitta / total) * 100) || 33,
+      kapha: Math.round((doshaCount.kapha / total) * 100) || 34,
+    };
+
+    // Normalize to 100%
+    const balanceTotal = doshaBalance.vata + doshaBalance.pitta + doshaBalance.kapha;
+    if (balanceTotal !== 100 && balanceTotal > 0) {
+      const diff = 100 - balanceTotal;
+      doshaBalance[vikriti] += diff;
+    }
+
+    // Determine imbalance level
+    const maxImbalance = Math.max(doshaCount.vata, doshaCount.pitta, doshaCount.kapha);
+    let imbalanceLevel: "mild" | "moderate" | "significant" = "mild";
+    if (maxImbalance >= 4) imbalanceLevel = "significant";
+    else if (maxImbalance >= 2) imbalanceLevel = "moderate";
+
+    // AI confidence stub (would be ML model in production)
+    let confidence = 75;
+    if (selectedSymptomIds.length === 0) confidence = 40;
+    else if (selectedSymptomIds.length >= 5) confidence = 85;
+    else if (selectedSymptomIds.length >= 3) confidence = 78;
+
+    // Detect if multiple conditions match (low confidence scenario)
+    const hasMultipleMatches = sorted.filter(([, count]) => count >= 2).length >= 2;
+    if (hasMultipleMatches) confidence -= 15;
+
+    // Check for red flags based on symptoms
+    const redFlags: string[] = [];
+    const severeSymptomIds = [4, 9, 13, 14, 19, 22]; // Joint pain, heartburn, burning, diarrhea, swelling, depression
+    const hasSevereSymptoms = selectedSymptomIds.some(id => severeSymptomIds.includes(id));
+    
+    if (hasSevereSymptoms && selectedSymptomIds.length >= 3) {
+      redFlags.push("Consider consulting a healthcare provider if symptoms persist for more than 2 weeks.");
+    }
+    if (selectedSymptomIds.includes(22)) {
+      redFlags.push("If you're experiencing persistent sadness or depression, please speak with a mental health professional.");
+    }
+
+    // Determine risk level
+    let riskLevel: "low" | "medium" | "high" = "low";
+    if (selectedSymptomIds.length >= 5 || hasSevereSymptoms) riskLevel = "medium";
+    if (redFlags.length >= 2 || imbalanceLevel === "significant") riskLevel = "high";
+
+    // Determine if advanced inputs are needed
+    const skinSymptomIds = [2, 10]; // Dry skin, skin rashes
+    const digestiveSymptomIds = [3, 7, 9, 14, 21]; // Constipation, bloating, heartburn, diarrhea, loss of appetite
+    
+    const hasSkinIssues = selectedSymptomIds.some(id => skinSymptomIds.includes(id));
+    const hasDigestiveIssues = selectedSymptomIds.some(id => digestiveSymptomIds.includes(id));
+    
+    const requiresAdvancedInputs = confidence < 60 || hasMultipleMatches || primaryGoal === "current_discomfort";
+    const requiredInputTypes: Array<"skin" | "tongue" | "face" | "doctor_consultation"> = [];
+    
+    if (requiresAdvancedInputs) {
+      if (hasSkinIssues) requiredInputTypes.push("skin");
+      if (hasDigestiveIssues) requiredInputTypes.push("tongue");
+      if (riskLevel === "high") requiredInputTypes.push("doctor_consultation");
+      if (requiredInputTypes.length === 0) requiredInputTypes.push("face");
+    }
+
+    // Generate possible conditions based on symptoms (stub AI output)
+    const possibleConditions: Array<{ name: string; confidence: number; category: string; relatedDosha?: DoshaType }> = [];
+    
+    if (doshaCount.vata >= 2) {
+      possibleConditions.push({
+        name: "Vata Imbalance Pattern",
+        confidence: Math.min(90, 60 + doshaCount.vata * 10),
+        category: "Dosha Imbalance",
+        relatedDosha: "vata"
+      });
+    }
+    if (doshaCount.pitta >= 2) {
+      possibleConditions.push({
+        name: "Pitta Aggravation Pattern",
+        confidence: Math.min(90, 60 + doshaCount.pitta * 10),
+        category: "Dosha Imbalance",
+        relatedDosha: "pitta"
+      });
+    }
+    if (doshaCount.kapha >= 2) {
+      possibleConditions.push({
+        name: "Kapha Accumulation Pattern",
+        confidence: Math.min(90, 60 + doshaCount.kapha * 10),
+        category: "Dosha Imbalance",
+        relatedDosha: "kapha"
+      });
+    }
+
+    const diagnosisResult: DiagnosisResult = {
+      ayurvedicAssessment: {
+        prakriti,
+        vikriti,
+        imbalanceLevel,
+        doshaBalance,
+      },
+      possibleConditions,
+      confidence,
+      riskLevel,
+      requiresAdvancedInputs,
+      requiredInputTypes,
+      requiresDoctorReview: riskLevel === "high",
+      redFlags,
+    };
+
+    // Generate preventive guidance based on vikriti
+    const preventiveGuidance: PreventiveGuidance = {
+      habits: lifestyleAdvice[vikriti].slice(0, 3),
+      foodPreferences: dietaryAdvice[vikriti].slice(0, 3),
+      sleepTips: getSleepTips(vikriti, lifestyle.sleepQuality),
+      stressTips: getStressTips(vikriti, lifestyle.stressLevel),
+      warnings: getWarnings(vikriti),
+    };
+
+    return { diagnosisResult, preventiveGuidance };
+  }
+
+  // Helper functions for preventive guidance
+  function getSleepTips(dosha: DoshaType, sleepQuality: string): string[] {
+    const tips: Record<DoshaType, string[]> = {
+      vata: [
+        "Establish a consistent bedtime routine before 10pm",
+        "Apply warm sesame oil to feet before sleep",
+        "Avoid screens for 1 hour before bed"
+      ],
+      pitta: [
+        "Keep bedroom cool and well-ventilated",
+        "Practice calming breathing before sleep",
+        "Avoid intense work or discussions in the evening"
+      ],
+      kapha: [
+        "Wake up before 6am to avoid morning heaviness",
+        "Keep bedroom free of clutter and well-lit during day",
+        "Avoid sleeping during the day"
+      ]
+    };
+    return sleepQuality === "poor" || sleepQuality === "fair" ? tips[dosha] : tips[dosha].slice(0, 1);
+  }
+
+  function getStressTips(dosha: DoshaType, stressLevel: string): string[] {
+    const tips: Record<DoshaType, string[]> = {
+      vata: [
+        "Practice grounding meditation or yoga nidra",
+        "Maintain a consistent daily routine",
+        "Spend time in nature, especially near trees"
+      ],
+      pitta: [
+        "Practice cooling pranayama (Shitali breath)",
+        "Take regular breaks during intense work",
+        "Engage in non-competitive physical activities"
+      ],
+      kapha: [
+        "Try energizing activities like brisk walking",
+        "Embrace new experiences and social activities",
+        "Practice stimulating pranayama (Bhastrika)"
+      ]
+    };
+    return stressLevel === "high" || stressLevel === "very_high" ? tips[dosha] : tips[dosha].slice(0, 1);
+  }
+
+  function getWarnings(dosha: DoshaType): string[] {
+    const warnings: Record<DoshaType, string[]> = {
+      vata: [
+        "Avoid cold, dry foods and raw vegetables",
+        "Minimize caffeine and stimulants",
+        "Avoid irregular meal times"
+      ],
+      pitta: [
+        "Avoid spicy, sour, and fermented foods",
+        "Limit exposure to direct sunlight",
+        "Avoid alcohol and excessive coffee"
+      ],
+      kapha: [
+        "Avoid heavy, oily, and sweet foods",
+        "Limit dairy products",
+        "Avoid excessive rest and sedentary behavior"
+      ]
+    };
+    return warnings[dosha].slice(0, 2);
+  }
+
+  // Create health check case endpoint
+  app.post("/api/health-check/create", (req, res) => {
+    try {
+      // Validate request body with Zod schema
+      const validationResult = createCaseRequestSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid request data", 
+          details: validationResult.error.errors 
+        });
+      }
+
+      const { userContext } = validationResult.data;
+      const symptomInput = req.body.symptomInput || { selectedSymptomIds: [], freeText: "" };
+
+      if (!symptomInput.selectedSymptomIds || symptomInput.selectedSymptomIds.length === 0) {
+        return res.status(400).json({ error: "At least one symptom must be selected" });
+      }
+
+      // Run the dual diagnosis engine
+      const { diagnosisResult, preventiveGuidance } = runDiagnosisEngine(userContext, symptomInput);
+
+      // Create the case
+      const healthCase: HealthCheckCase = {
+        id: randomUUID(),
+        status: diagnosisResult.requiresAdvancedInputs ? "awaiting_advanced_inputs" : "diagnosis_complete",
+        userContext,
+        symptomInput,
+        diagnosisResult,
+        preventiveGuidance,
+        createdAt: new Date().toISOString(),
+      };
+
+      return res.json(healthCase);
+    } catch (error) {
+      console.error("Health check create error:", error);
+      return res.status(500).json({ error: "Failed to create health check case" });
     }
   });
 

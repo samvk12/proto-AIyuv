@@ -9,6 +9,8 @@ import Home from "@/pages/home";
 import Quiz from "@/pages/quiz";
 import Results from "@/pages/results";
 import Symptoms from "@/pages/symptoms";
+import HealthCheck from "@/pages/health-check";
+import HealthCheckResults from "@/pages/health-check-results";
 import NotFound from "@/pages/not-found";
 import { Leaf } from "lucide-react";
 import { Link } from "wouter";
@@ -54,6 +56,8 @@ function Router() {
       <Route path="/quiz" component={Quiz} />
       <Route path="/results" component={Results} />
       <Route path="/symptoms" component={Symptoms} />
+      <Route path="/health-check" component={HealthCheck} />
+      <Route path="/health-check/results" component={HealthCheckResults} />
       <Route path="/profile" component={Home} />
       <Route component={NotFound} />
     </Switch>

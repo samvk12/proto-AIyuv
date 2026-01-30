@@ -17,7 +17,10 @@ import {
   Flower2,
   CheckCircle2,
   Leaf,
-  Sun
+  Sun,
+  Stethoscope,
+  Shield,
+  UserCircle
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -200,27 +203,36 @@ function LandingView() {
               </div>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground leading-tight mb-6">
-                Discover Your
-                <span className="text-primary block">Natural Balance</span>
+                Understand your health early
+                <span className="text-primary block">Prevent before it becomes disease</span>
               </h1>
               
               <p className="text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8">
-                AIyuv combines ancient Ayurvedic wisdom with modern AI to provide personalized 
-                health insights based on your unique body constitution (Dosha).
+                AIyuv combines ancient Ayurvedic wisdom with modern AI to provide early health insights 
+                and preventive guidance based on your unique body constitution.
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link href="/quiz">
-                  <Button size="lg" className="gap-2 w-full sm:w-auto" data-testid="button-start-quiz">
-                    Take Dosha Quiz
+              <div className="flex flex-col gap-4 justify-center lg:justify-start">
+                <Link href="/health-check">
+                  <Button size="lg" className="gap-2 w-full sm:w-auto" data-testid="button-self-health-check">
+                    <Stethoscope className="w-5 h-5" />
+                    Self Health Check
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
-                <Link href="/symptoms">
-                  <Button size="lg" variant="outline" className="gap-2 w-full sm:w-auto" data-testid="button-symptom-checker">
-                    Symptom Checker
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link href="/quiz">
+                    <Button size="lg" variant="outline" className="gap-2 w-full sm:w-auto" data-testid="button-start-quiz">
+                      <Brain className="w-5 h-5" />
+                      Learn About Your Body Type
+                    </Button>
+                  </Link>
+                  <Button size="lg" variant="outline" className="gap-2 w-full sm:w-auto" disabled data-testid="button-consult-practitioner">
+                    <UserCircle className="w-5 h-5" />
+                    Consult Practitioner
+                    <span className="text-xs opacity-70">(Coming Soon)</span>
                   </Button>
-                </Link>
+                </div>
               </div>
             </div>
             
