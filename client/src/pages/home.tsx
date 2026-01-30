@@ -5,6 +5,7 @@ import { WellnessScore } from "@/components/wellness-score";
 import { QuickActions } from "@/components/quick-actions";
 import { DoshaBalance } from "@/components/dosha-balance";
 import { PersonalizedPlan } from "@/components/personalized-plan";
+import { DailyPreventiveCareSection } from "@/components/daily-preventive-care";
 import { 
   Bell,
   User,
@@ -126,6 +127,17 @@ function DashboardView({ doshaData }: DashboardViewProps) {
             />
           </CardContent>
         </Card>
+      </div>
+
+      {/* Daily Preventive Care */}
+      <div className="px-6 mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-lg">Daily Preventive Care</h2>
+        </div>
+        <DailyPreventiveCareSection 
+          primaryDosha={doshaData.primaryDosha}
+          wellnessScore={87}
+        />
       </div>
 
       {/* Today's Personalized Plan */}

@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { doshaDescriptions } from "@shared/quiz-data";
-import { quizSubmissionSchema, symptomCheckSchema, type DoshaResult, type DoshaType, type SymptomAnalysis, type Remedy } from "@shared/schema";
+import { getTipsForProfile, getGreeting, getFocusArea } from "@shared/preventive-tips";
+import { quizSubmissionSchema, symptomCheckSchema, type DoshaResult, type DoshaType, type SymptomAnalysis, type Remedy, type DailyPreventiveCare } from "@shared/schema";
 
 // Symptom to dosha mapping
 const symptomDoshaMapping: Record<number, DoshaType> = {
@@ -295,6 +296,43 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Symptom analysis error:", error);
       return res.status(500).json({ error: "Failed to analyze symptoms" });
+    }
+  });
+
+  // Daily preventive care endpoint
+  app.post("/api/preventive-care/daily", (req, res) => {
+    try {
+      const { primaryDosha, wellnessScore, streakDays = 0 } = req.body;
+
+      if (!primaryDosha || typeof wellnessScore !== "number") {
+        return res.status(400).json({ 
+          error: "Missing required fields: primaryDosha and wellnessScore" 
+        });
+      }
+
+      if (!["vata", "pitta", "kapha"].includes(primaryDosha)) {
+        return res.status(400).json({ error: "Invalid dosha type" });
+      }
+
+      // Get personalized tips based on dosha and wellness score
+      const tips = getTipsForProfile(primaryDosha as DoshaType, wellnessScore, 3);
+      const greeting = getGreeting(primaryDosha as DoshaType);
+      const focusArea = getFocusArea(primaryDosha as DoshaType, wellnessScore);
+
+      const response: DailyPreventiveCare = {
+        date: new Date().toISOString().split("T")[0],
+        wellnessScore,
+        primaryDosha: primaryDosha as DoshaType,
+        tips,
+        greeting,
+        focusArea,
+        streakDays: streakDays + 1,
+      };
+
+      return res.json(response);
+    } catch (error) {
+      console.error("Preventive care error:", error);
+      return res.status(500).json({ error: "Failed to generate preventive care tips" });
     }
   });
 

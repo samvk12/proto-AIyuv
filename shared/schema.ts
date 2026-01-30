@@ -100,3 +100,61 @@ export const symptomAnalysisSchema = z.object({
 });
 
 export type SymptomAnalysis = z.infer<typeof symptomAnalysisSchema>;
+
+// Preventive tip categories
+export type PreventiveTipCategory = 
+  | "lifestyle" 
+  | "food" 
+  | "hydration" 
+  | "sleep" 
+  | "activity" 
+  | "mental_wellness";
+
+// Wellness score ranges
+export type WellnessScoreRange = "low" | "medium" | "high";
+
+// Preventive tip schema
+export const preventiveTipSchema = z.object({
+  id: z.string(),
+  category: z.enum(["lifestyle", "food", "hydration", "sleep", "activity", "mental_wellness"]),
+  dosha: z.enum(["vata", "pitta", "kapha"]),
+  scoreRange: z.enum(["low", "medium", "high"]),
+  title: z.string(),
+  description: z.string(),
+  benefit: z.string(),
+  riskPrevention: z.string(),
+  icon: z.string(),
+});
+
+export type PreventiveTip = z.infer<typeof preventiveTipSchema>;
+
+// Daily preventive care response
+export const dailyPreventiveCareSchema = z.object({
+  date: z.string(),
+  wellnessScore: z.number(),
+  primaryDosha: z.enum(["vata", "pitta", "kapha"]),
+  tips: z.array(preventiveTipSchema),
+  greeting: z.string(),
+  focusArea: z.string(),
+  streakDays: z.number(),
+});
+
+export type DailyPreventiveCare = z.infer<typeof dailyPreventiveCareSchema>;
+
+// User wellness profile (for future database storage)
+export const userWellnessProfileSchema = z.object({
+  id: z.string(),
+  primaryDosha: z.enum(["vata", "pitta", "kapha"]),
+  secondaryDosha: z.enum(["vata", "pitta", "kapha"]).optional(),
+  wellnessScore: z.number(),
+  balance: z.object({
+    vata: z.number(),
+    pitta: z.number(),
+    kapha: z.number(),
+  }),
+  lastAssessmentDate: z.string(),
+  streakDays: z.number(),
+  tipsViewed: z.array(z.string()),
+});
+
+export type UserWellnessProfile = z.infer<typeof userWellnessProfileSchema>;
