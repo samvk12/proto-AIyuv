@@ -1,0 +1,211 @@
+You are an expert full-stack engineer and system architect.
+
+Build a modular, scalable web application for an AI-powered preventive Ayurvedic health platform.
+The platform is NOT a medical diagnosis tool and MUST follow safety-first, doctor-in-the-loop design.
+
+========================
+CORE PRODUCT GOAL
+========================
+Provide early health insights using:
+- User context
+- Symptom inputs
+- Ayurvedic logic (dosha analysis)
+- AI-assisted medical screening
+while ensuring:
+- No auto-prescription
+- Doctor confirmation for medicines
+- Conditional advanced input requirements
+
+========================
+HIGH-LEVEL USER FLOW
+========================
+User → Context Collection → Symptom Input → Ambiguity Check →
+(If needed) Required Advanced Input →
+AI + Ayurveda Analysis →
+Preventive Guidance →
+Optional Doctor Verification →
+Optional Medicine Fulfillment →
+Feedback Loop
+
+========================
+1. LANDING PAGE
+========================
+- Headline: "Understand your health early — prevent before it becomes disease."
+- Buttons:
+  - Self Health Check
+  - Learn About Your Body Type
+  - Consult Practitioner (future)
+- No login required initially
+
+========================
+2. USER CONTEXT COLLECTION
+========================
+Collect progressively:
+- Age range
+- Gender (optional)
+- City tier (Tier 1 / 2 / 3 / Rural)
+- Lifestyle:
+  - Sleep quality
+  - Stress level
+  - Activity level
+- Primary goal:
+  - Prevention
+  - Current discomfort
+  - Long-term wellness
+
+========================
+3. SYMPTOM INPUT LAYER
+========================
+- Checklist + free-text input
+- Examples:
+  - Fatigue
+  - Digestive issues
+  - Skin problems
+  - Anxiety / sleep issues
+- DO NOT request advanced inputs here
+
+========================
+4. DIAGNOSTIC CONFIRMATION GATE (CRITICAL)
+========================
+Before finalizing diagnosis or allowing medicines:
+
+Trigger this gate when:
+- Symptoms match multiple conditions
+- AI confidence score is low
+- Overlapping illnesses detected
+- Medicines or doctor confirmation is requested
+
+If triggered:
+- Require specific advanced inputs based on symptom category
+
+Advanced input mapping:
+- Skin issues → Skin image upload
+- Digestive/metabolic → Tongue image
+- Facial indicators → Face image
+- Systemic/unclear → Doctor consultation
+- Pulse-related → Practitioner-assisted pulse (future)
+
+If required advanced input is NOT provided:
+- Do NOT finalize diagnosis
+- Do NOT allow medicines
+- Show only general lifestyle guidance
+
+========================
+5. DUAL DIAGNOSIS ENGINE
+========================
+A. Ayurvedic Intelligence (Rule-Based)
+- Dosha imbalance detection (Vata / Pitta / Kapha)
+- Prakriti vs Vikriti mapping
+- Pattern consistency checks
+- Visual cue refinement when images are provided
+
+B. Medical Intelligence (AI-Assisted)
+- Symptom clustering
+- Image-assisted narrowing (when available)
+- Red-flag detection
+- Risk stratification:
+  - Low → Preventive guidance
+  - Medium → Monitoring
+  - High → Doctor referral
+
+========================
+6. AI PROCESSING RULES
+========================
+- Normalize all inputs
+- Use supervised models (stub initially)
+- Combine outputs with Ayurveda rule engine
+- Generate confidence score
+- Apply safety filter
+- NEVER make definitive medical claims
+
+========================
+7. OUTPUT TO USER
+========================
+Display:
+1. Health Snapshot
+   - Plain-language summary
+   - Dosha imbalance visualization
+2. Preventive Guidance
+   - Habits
+   - Food preferences (NO prescriptions)
+   - Sleep & stress tips
+3. Medical Awareness
+   - Escalation advice
+
+Always show disclaimer:
+"This is not a medical diagnosis."
+
+========================
+8. NEXT STEPS OPTIONS
+========================
+Show choices:
+A. Lifestyle & Prevention Only (default)
+B. Get Medicines (Doctor-Verified only)
+C. Consult Doctor First
+
+IMPORTANT RULE:
+- Option B is DISABLED if required advanced inputs were not provided
+
+========================
+9. DOCTOR CONFIRMATION FLOW
+========================
+- Mandatory user consent before sharing data
+- Doctor sees structured case file:
+  - Symptoms
+  - Lifestyle
+  - Advanced inputs
+  - AI confidence (before/after)
+  - Dosha analysis (supporting only)
+- Doctor can:
+  - Approve medicines
+  - Modify medicines
+  - Reject & request consultation
+- Doctor must explicitly confirm prescription
+
+========================
+10. MEDICINE FULFILLMENT
+========================
+After doctor approval:
+- Provide prescription PDF
+- Allow partner pharmacy ordering
+- Allow local pharmacy option
+Platform NEVER auto-prescribes or dispenses
+
+========================
+11. FEEDBACK & LEARNING LOOP
+========================
+Ask:
+- Was this helpful?
+- Did symptoms improve?
+- Any side effects? (if medicines)
+
+Store feedback for:
+- Model improvement
+- Safety refinement
+
+========================
+12. ADMIN / FOUNDER DASHBOARD
+========================
+Include:
+- User count
+- Common symptoms
+- Dosha patterns
+- Drop-off points
+- Advanced input triggers
+- Safety flags
+
+========================
+TECH CONSTRAINTS
+========================
+- Modular architecture
+- Clear separation of UI, logic, AI, and safety layers
+- All medical actions gated by confidence + confirmation logic
+- Build stubs for AI models (can be replaced later)
+
+Start by:
+1. Creating the full folder structure
+2. Implementing the frontend flow screens
+3. Adding backend APIs with placeholder logic
+4. Clearly marking TODOs for AI models
+
+DO NOT simplify or skip safety logic.
