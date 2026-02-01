@@ -452,17 +452,6 @@ export default function HealthCheckResults() {
         </Card>
       )}
 
-      {/* Disclaimer - Required by Spec Section 7 */}
-      <Alert className="mb-6">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Important Disclaimer</AlertTitle>
-        <AlertDescription className="text-sm">
-          This is not a medical diagnosis. The information provided is for educational
-          and preventive wellness purposes only. Always consult a qualified healthcare
-          professional for medical advice, diagnosis, or treatment.
-        </AlertDescription>
-      </Alert>
-
       {/* Section 8: Next Steps Options */}
       {nextStepsOptions && (
         <div className="space-y-4 mb-8">
