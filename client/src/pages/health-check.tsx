@@ -244,22 +244,26 @@ export default function HealthCheck() {
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-2xl">
-      {/* Progress bar */}
-      <div className="mb-8">
-        <div className="flex justify-between text-sm text-muted-foreground mb-2">
-          <span>Step {step === "context" ? 1 : 2} of 2</span>
-          <span>{progress}%</span>
+      {/* Progress bar - Clean visual indicator */}
+      <div className="mb-10">
+        <div className="flex justify-between text-sm mb-3">
+          <span className="font-medium text-foreground">
+            Step {step === "context" ? 1 : 2} of 2
+          </span>
+          <span className="text-muted-foreground">{progress}% complete</span>
         </div>
-        <Progress value={progress} className="h-2" />
+        <Progress value={progress} className="h-2.5" />
       </div>
 
       {/* Context Collection - Spec Section 2 */}
       {step === "context" && (
-        <div className="space-y-6">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-serif font-bold mb-2">Tell Us About Yourself</h1>
-            <p className="text-muted-foreground">
-              This helps us personalize your health insights
+        <div className="space-y-6 animate-fade-in">
+          <div className="text-center mb-10">
+            <h1 className="text-2xl md:text-3xl font-serif font-bold mb-3 text-foreground">
+              Tell Us About Yourself
+            </h1>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              This helps us personalize your health insights and recommendations
             </p>
           </div>
 
@@ -451,11 +455,13 @@ export default function HealthCheck() {
 
       {/* Symptom Input - Spec Section 3 */}
       {step === "symptoms" && (
-        <div className="space-y-6">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-serif font-bold mb-2">Describe Your Symptoms</h1>
-            <p className="text-muted-foreground">
-              Select any symptoms you're experiencing
+        <div className="space-y-6 animate-fade-in">
+          <div className="text-center mb-10">
+            <h1 className="text-2xl md:text-3xl font-serif font-bold mb-3 text-foreground">
+              Describe Your Symptoms
+            </h1>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Select any symptoms you're currently experiencing
             </p>
           </div>
 
@@ -516,21 +522,21 @@ export default function HealthCheck() {
             ))
           )}
 
-          {/* Selected symptoms summary */}
+          {/* Selected symptoms summary - Visual feedback */}
           {selectedSymptoms.length > 0 && (
-            <Card className="bg-primary/5">
+            <Card className="bg-accent/50 border-primary/20">
               <CardContent className="py-4">
-                <p className="text-sm font-medium mb-2">
-                  Selected: {selectedSymptoms.length} symptom(s)
+                <p className="text-sm font-medium mb-3 text-foreground">
+                  Selected: {selectedSymptoms.length} symptom{selectedSymptoms.length !== 1 ? 's' : ''}
                 </p>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-2">
                   {selectedSymptoms.map((id) => {
                     const symptom = symptoms.find((s) => s.id === id);
                     return symptom ? (
                       <Badge
                         key={id}
                         variant="secondary"
-                        className="cursor-pointer"
+                        className="cursor-pointer hover:bg-destructive/20 transition-colors"
                         onClick={() =>
                           setSelectedSymptoms(selectedSymptoms.filter((sid) => sid !== id))
                         }
@@ -596,17 +602,21 @@ export default function HealthCheck() {
         </div>
       )}
 
-      {/* Processing */}
+      {/* Processing - Clean loading state */}
       {step === "processing" && (
-        <div className="text-center py-16">
-          <Loader2 className="w-16 h-16 text-primary mx-auto mb-6 animate-spin" />
-          <h2 className="text-xl font-serif font-bold mb-2">Analyzing Your Health Profile</h2>
-          <p className="text-muted-foreground">
-            Combining Ayurvedic wisdom with AI analysis...
+        <div className="text-center py-20 animate-fade-in">
+          <div className="w-20 h-20 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-8">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          </div>
+          <h2 className="text-xl md:text-2xl font-serif font-bold mb-3 text-foreground">
+            Analyzing Your Health Profile
+          </h2>
+          <p className="text-muted-foreground max-w-sm mx-auto">
+            Combining Ayurvedic wisdom with AI analysis to provide personalized insights...
           </p>
           {createCaseMutation.isError && (
-            <div className="mt-6">
-              <p className="text-red-500 mb-4">Something went wrong. Please try again.</p>
+            <div className="mt-8 p-4 rounded-xl bg-destructive/10 border border-destructive/20 max-w-sm mx-auto">
+              <p className="text-destructive font-medium mb-4">Something went wrong. Please try again.</p>
               <Button onClick={() => setStep("symptoms")} variant="outline">
                 Go Back
               </Button>

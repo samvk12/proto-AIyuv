@@ -2,82 +2,109 @@
 @tailwind components;
 @tailwind utilities;
 
-/* LIGHT MODE - Warm Ayurvedic Theme */
+/* ============================================
+   WHITEISH-GREEN AYURVEDIC THEME
+   Color Palette:
+   - Background (near-white): #FBFDF9
+   - Soft panel / cards: #F1F8F0
+   - Mid green (surface accents): #D9EFE0
+   - Primary green (brand / main CTA): #2E8B5A
+   - Deep accent (headlines / strong text): #114D33
+   - Muted text (secondary text): #3E5A4C
+   - Warm neutral (soft contrast sections): #F7F3EE
+   - CTA highlight (secondary actions): #7CCF9A
+   ============================================ */
+
+/* LIGHT MODE - Whiteish Green Theme */
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
+  --button-outline: rgba(0,0,0, .08);
+  --badge-outline: rgba(0,0,0, .04);
 
   /* Automatic computation of border around primary / danger buttons */
-  --opaque-button-border-intensity: -8; /* In terms of percentages */
+  --opaque-button-border-intensity: -8;
 
   /* Backgrounds applied on top of other backgrounds when hovered/active */
   --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
+  --elevate-2: rgba(0,0,0, .06);
 
-  --background: 40 30% 97%;
-  --foreground: 25 25% 15%;
-  --border: 35 20% 88%;
+  /* Background: #FBFDF9 - near-white with green tint */
+  --background: 100 33% 98%;
+  /* Foreground: #114D33 - deep green for main text */
+  --foreground: 153 65% 18%;
+  /* Border: #D9EFE0 - mid green */
+  --border: 136 35% 89%;
 
-  --card: 40 30% 99%;
-  --card-foreground: 25 25% 15%;
-  --card-border: 35 15% 90%;
+  /* Cards: #F1F8F0 - soft green panels */
+  --card: 110 33% 96%;
+  --card-foreground: 153 65% 18%;
+  --card-border: 136 30% 87%;
 
-  --sidebar: 38 35% 95%;
-  --sidebar-foreground: 25 25% 20%;
-  --sidebar-border: 35 20% 88%;
-  --sidebar-primary: 16 60% 45%;
+  /* Sidebar */
+  --sidebar: 110 30% 95%;
+  --sidebar-foreground: 153 65% 20%;
+  --sidebar-border: 136 30% 88%;
+  --sidebar-primary: 152 50% 36%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 35 40% 90%;
-  --sidebar-accent-foreground: 25 25% 20%;
-  --sidebar-ring: 16 60% 45%;
+  --sidebar-accent: 136 35% 89%;
+  --sidebar-accent-foreground: 153 65% 18%;
+  --sidebar-ring: 152 50% 36%;
 
-  --popover: 40 30% 99%;
-  --popover-foreground: 25 25% 15%;
-  --popover-border: 35 15% 90%;
+  /* Popover */
+  --popover: 110 33% 97%;
+  --popover-foreground: 153 65% 18%;
+  --popover-border: 136 30% 87%;
 
-  /* Terracotta primary - warm brown/orange from reference */
-  --primary: 16 55% 42%;
+  /* Primary: #2E8B5A - main brand green */
+  --primary: 152 50% 36%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 35 35% 94%;
-  --secondary-foreground: 25 30% 25%;
+  /* Secondary: #7CCF9A - lighter green for secondary actions */
+  --secondary: 142 47% 65%;
+  --secondary-foreground: 153 65% 15%;
 
-  --muted: 38 25% 94%;
-  --muted-foreground: 25 15% 45%;
+  /* Muted: #F7F3EE - warm neutral */
+  --muted: 33 30% 95%;
+  --muted-foreground: 150 19% 30%;
 
-  /* Orange accent */
-  --accent: 28 80% 52%;
-  --accent-foreground: 0 0% 100%;
+  /* Accent: #D9EFE0 - mid green surface */
+  --accent: 136 35% 89%;
+  --accent-foreground: 153 65% 18%;
 
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 35 20% 85%;
-  --ring: 16 55% 42%;
+  --input: 136 25% 88%;
+  --ring: 152 50% 36%;
   
-  /* Dosha colors */
+  /* Dosha colors - maintaining distinct colors for each */
   --vata: 210 70% 50%;
   --pitta: 0 70% 55%;
-  --kapha: 142 55% 40%;
+  --kapha: 152 50% 36%;
   
-  --chart-1: 16 55% 42%;
-  --chart-2: 28 80% 52%;
+  /* Chart colors */
+  --chart-1: 152 50% 36%;
+  --chart-2: 142 47% 65%;
   --chart-3: 210 70% 50%;
   --chart-4: 0 70% 55%;
-  --chart-5: 142 55% 40%;
+  --chart-5: 136 35% 60%;
 
-  --font-sans: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  /* Typography */
+  --font-sans: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-serif: 'Playfair Display', Georgia, serif;
   --font-mono: 'JetBrains Mono', Menlo, monospace;
-  --radius: .625rem;
-  --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0, 0.03);
-  --shadow-xs: 0px 1px 3px 0px rgba(0,0,0, 0.05);
-  --shadow-sm: 0px 2px 4px 0px rgba(0,0,0, 0.05), 0px 1px 2px -1px rgba(0,0,0, 0.03);
-  --shadow: 0px 4px 6px -1px rgba(0,0,0, 0.07), 0px 2px 4px -1px rgba(0,0,0, 0.04);
-  --shadow-md: 0px 6px 10px -2px rgba(0,0,0, 0.08), 0px 3px 6px -2px rgba(0,0,0, 0.05);
-  --shadow-lg: 0px 10px 15px -3px rgba(0,0,0, 0.10), 0px 4px 6px -2px rgba(0,0,0, 0.05);
-  --shadow-xl: 0px 20px 25px -5px rgba(0,0,0, 0.10), 0px 10px 10px -5px rgba(0,0,0, 0.04);
-  --shadow-2xl: 0px 25px 50px -12px rgba(0,0,0, 0.25);
+  
+  --radius: 0.75rem;
+  
+  /* Refined shadows for green theme */
+  --shadow-2xs: 0px 1px 2px 0px rgba(17,77,51, 0.03);
+  --shadow-xs: 0px 1px 3px 0px rgba(17,77,51, 0.05);
+  --shadow-sm: 0px 2px 4px 0px rgba(17,77,51, 0.04), 0px 1px 2px -1px rgba(17,77,51, 0.02);
+  --shadow: 0px 4px 6px -1px rgba(17,77,51, 0.06), 0px 2px 4px -1px rgba(17,77,51, 0.03);
+  --shadow-md: 0px 6px 10px -2px rgba(17,77,51, 0.07), 0px 3px 6px -2px rgba(17,77,51, 0.04);
+  --shadow-lg: 0px 10px 15px -3px rgba(17,77,51, 0.08), 0px 4px 6px -2px rgba(17,77,51, 0.04);
+  --shadow-xl: 0px 20px 25px -5px rgba(17,77,51, 0.08), 0px 10px 10px -5px rgba(17,77,51, 0.03);
+  --shadow-2xl: 0px 25px 50px -12px rgba(17,77,51, 0.20);
+  
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
@@ -104,6 +131,7 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+/* DARK MODE - Deep Green Theme */
 .dark {
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
@@ -111,56 +139,66 @@
   --opaque-button-border-intensity: 9;
 
   --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-2: rgba(255,255,255, .08);
 
-  --background: 25 20% 8%;
-  --foreground: 40 20% 92%;
-  --border: 30 15% 20%;
+  /* Dark background with green undertone */
+  --background: 152 25% 8%;
+  --foreground: 110 30% 92%;
+  --border: 150 20% 18%;
 
-  --card: 28 18% 12%;
-  --card-foreground: 40 20% 92%;
-  --card-border: 30 12% 22%;
+  /* Cards in dark mode */
+  --card: 150 20% 11%;
+  --card-foreground: 110 30% 92%;
+  --card-border: 150 18% 20%;
 
-  --sidebar: 25 20% 10%;
-  --sidebar-foreground: 40 15% 88%;
-  --sidebar-border: 30 12% 18%;
-  --sidebar-primary: 16 60% 50%;
-  --sidebar-primary-foreground: 25 20% 8%;
-  --sidebar-accent: 30 20% 18%;
-  --sidebar-accent-foreground: 40 15% 88%;
-  --sidebar-ring: 16 60% 50%;
+  /* Sidebar dark */
+  --sidebar: 152 22% 9%;
+  --sidebar-foreground: 110 25% 88%;
+  --sidebar-border: 150 18% 16%;
+  --sidebar-primary: 152 50% 45%;
+  --sidebar-primary-foreground: 152 25% 8%;
+  --sidebar-accent: 150 20% 16%;
+  --sidebar-accent-foreground: 110 25% 88%;
+  --sidebar-ring: 152 50% 45%;
 
-  --popover: 28 18% 12%;
-  --popover-foreground: 40 20% 92%;
-  --popover-border: 30 12% 22%;
+  /* Popover dark */
+  --popover: 150 20% 11%;
+  --popover-foreground: 110 30% 92%;
+  --popover-border: 150 18% 20%;
 
-  --primary: 16 60% 50%;
+  /* Primary green - slightly brighter for dark mode */
+  --primary: 152 50% 45%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 30 18% 18%;
-  --secondary-foreground: 40 18% 88%;
+  /* Secondary */
+  --secondary: 150 20% 16%;
+  --secondary-foreground: 110 25% 88%;
 
-  --muted: 28 15% 16%;
-  --muted-foreground: 35 12% 55%;
+  /* Muted */
+  --muted: 150 15% 14%;
+  --muted-foreground: 140 15% 55%;
 
-  --accent: 28 70% 55%;
-  --accent-foreground: 0 0% 100%;
+  /* Accent */
+  --accent: 142 35% 25%;
+  --accent-foreground: 110 30% 92%;
 
   --destructive: 0 65% 55%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 30 15% 25%;
-  --ring: 16 60% 50%;
+  --input: 150 18% 22%;
+  --ring: 152 50% 45%;
   
+  /* Dosha colors for dark mode */
   --vata: 210 70% 55%;
   --pitta: 0 65% 58%;
-  --kapha: 142 55% 45%;
+  --kapha: 152 50% 50%;
   
-  --chart-1: 16 60% 55%;
-  --chart-2: 28 70% 58%;
+  /* Chart colors dark */
+  --chart-1: 152 50% 50%;
+  --chart-2: 142 47% 55%;
   --chart-3: 210 70% 55%;
   --chart-4: 0 65% 58%;
-  --chart-5: 142 55% 50%;
+  --chart-5: 136 35% 50%;
 
   --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0, 0.15);
   --shadow-xs: 0px 1px 3px 0px rgba(0,0,0, 0.20);
@@ -180,20 +218,35 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+  
+  /* Improved typography hierarchy */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif tracking-tight;
+  }
 }
 
-/* Gradient backgrounds */
-.gradient-terracotta {
-  background: linear-gradient(135deg, hsl(16 55% 42%) 0%, hsl(25 60% 35%) 100%);
+/* ============================================
+   GRADIENT BACKGROUNDS
+   ============================================ */
+.gradient-green {
+  background: linear-gradient(135deg, hsl(152 50% 36%) 0%, hsl(142 47% 45%) 100%);
 }
 
-.gradient-terracotta-dark {
-  background: linear-gradient(135deg, hsl(16 60% 50%) 0%, hsl(25 65% 40%) 100%);
+.gradient-green-subtle {
+  background: linear-gradient(135deg, hsl(136 35% 89% / 0.5) 0%, hsl(110 33% 96%) 100%);
 }
 
-/* Action button styles matching reference */
+.gradient-hero {
+  background: linear-gradient(180deg, hsl(110 33% 96%) 0%, hsl(100 33% 98%) 50%, hsl(136 35% 89% / 0.3) 100%);
+}
+
+/* ============================================
+   COMPONENT STYLES
+   ============================================ */
+
+/* Action button styles */
 .action-btn {
-  @apply flex flex-col items-center justify-center gap-2 p-4 rounded-xl transition-colors duration-200;
+  @apply flex flex-col items-center justify-center gap-2 p-4 rounded-xl transition-all duration-200;
 }
 
 /* Dosha progress bars */
@@ -210,12 +263,12 @@
 }
 
 .dosha-bar-kapha {
-  background: linear-gradient(90deg, hsl(142 55% 40%) 0%, hsl(142 55% 50%) 100%);
+  background: linear-gradient(90deg, hsl(152 50% 36%) 0%, hsl(152 50% 46%) 100%);
 }
 
 /* Plan item styles */
 .plan-item {
-  @apply flex items-center gap-4 p-4 bg-card rounded-xl border border-border transition-colors duration-200;
+  @apply flex items-center gap-4 p-4 bg-card rounded-xl border border-border transition-all duration-200;
 }
 
 /* Bottom navigation */
@@ -252,6 +305,10 @@
   @apply animate-pulse bg-muted rounded;
 }
 
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
 /* Smooth transitions */
 .smooth-appear {
   animation: smoothAppear 0.3s ease-out forwards;
@@ -281,9 +338,19 @@
 .stagger-children > *:nth-child(5) { animation-delay: 200ms; }
 .stagger-children > *:nth-child(6) { animation-delay: 250ms; }
 
-/**
- * Using the elevate system.
- */
+/* Fade in animation */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* ============================================
+   ELEVATE SYSTEM (Hover/Active States)
+   ============================================ */
 @layer utilities {
 
   /* Hide ugly search cancel button in Chrome until we can style it properly */
@@ -356,5 +423,22 @@
   .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
+  }
+  
+  /* Text hierarchy utilities */
+  .text-headline {
+    color: hsl(153 65% 18%);
+  }
+  
+  .dark .text-headline {
+    color: hsl(110 30% 92%);
+  }
+  
+  .text-body {
+    color: hsl(150 19% 30%);
+  }
+  
+  .dark .text-body {
+    color: hsl(140 15% 55%);
   }
 }

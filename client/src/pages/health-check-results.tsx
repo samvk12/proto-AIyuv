@@ -42,11 +42,11 @@ import { apiRequest } from "@/lib/queryClient";
 const doshaColors = {
   vata: "bg-blue-500",
   pitta: "bg-red-500",
-  kapha: "bg-green-500",
+  kapha: "bg-primary",
 };
 
 const riskBadgeColors = {
-  low: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  low: "bg-accent text-primary dark:bg-accent dark:text-primary",
   medium: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
   high: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
@@ -146,13 +146,17 @@ export default function HealthCheckResults() {
   ) ?? false;
 
   return (
-    <div className="container mx-auto px-6 py-8 max-w-2xl">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-serif font-bold mb-2" data-testid="text-results-heading">Your Health Insights</h1>
-        <p className="text-muted-foreground">
-          Based on Ayurvedic analysis and AI screening
+    <div className="container mx-auto px-6 py-8 max-w-2xl animate-fade-in">
+      {/* Header - Clean success state */}
+      <div className="text-center mb-10">
+        <div className="w-20 h-20 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2 className="w-10 h-10 text-primary" />
+        </div>
+        <h1 className="text-2xl md:text-3xl font-serif font-bold mb-3 text-foreground" data-testid="text-results-heading">
+          Your Health Insights
+        </h1>
+        <p className="text-muted-foreground max-w-md mx-auto">
+          Personalized recommendations based on Ayurvedic analysis and AI screening
         </p>
       </div>
 

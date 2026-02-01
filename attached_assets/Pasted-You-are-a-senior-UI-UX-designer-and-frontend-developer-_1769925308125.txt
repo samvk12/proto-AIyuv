@@ -1,0 +1,75 @@
+You are a senior UI/UX designer and frontend developer.
+
+Your task is to design a clean, modern, and user-friendly UI following best UI/UX practices and using the exact color palette provided below.
+
+────────────────────────
+COLOR PALETTE (MANDATORY)
+────────────────────────
+Use this whiteish-green theme consistently across the UI:
+
+- Background (near-white): #FBFDF9
+- Soft panel / cards: #F1F8F0
+- Mid green (surface accents): #D9EFE0
+- Primary green (brand / main CTA): #2E8B5A
+- Deep accent (headlines / strong text): #114D33
+- Muted text (secondary text): #3E5A4C
+- Warm neutral (soft contrast sections): #F7F3EE
+- CTA highlight (secondary actions): #7CCF9A
+
+Do NOT introduce additional colors unless absolutely necessary.
+Ensure sufficient contrast for readability and accessibility.
+
+────────────────────────
+DESIGN REQUIREMENTS
+────────────────────────
+
+1. Purpose & Clarity
+- Clearly define the goal of the screen.
+- Use a strong, concise headline in #114D33.
+- Subtext should use #3E5A4C.
+- Avoid unnecessary visual noise.
+
+2. Layout & Structure
+- Use a clean grid-based layout.
+- Maintain consistent padding, spacing, and alignment.
+- Create clear visual hierarchy: headline → description → primary action.
+- Use soft panels (#F1F8F0) for grouped content.
+
+3. Typography
+- Use a maximum of 1–2 font families.
+- Headings: bold or semi-bold, color #114D33.
+- Body text: regular weight, color #3E5A4C.
+- Buttons: readable, medium weight.
+
+4. Buttons & Interactions
+- Primary CTA buttons:
+  - Background: #2E8B5A
+  - Text: white
+- Secondary buttons:
+  - Background: #7CCF9A or outline using #2E8B5A
+- Add hover and focus states using slightly darker/lighter shades.
+- Ensure all buttons look clickable.
+
+5. Usability & Accessibility
+- Design should be intuitive without instructions.
+- Touch-friendly spacing for buttons and inputs.
+- Maintain accessibility standards for contrast and readability.
+
+6. Consistency & Branding
+- Maintain consistent component styles throughout.
+- Use mid green (#D9EFE0) for dividers, borders, and subtle highlights.
+- Icons and visuals should be minimal and purposeful.
+
+7. Responsiveness
+- Ensure the UI works well on desktop, tablet, and mobile.
+- Avoid fixed widths; use flexible layouts.
+
+────────────────────────
+OUTPUT EXPECTATIONS
+────────────────────────
+- Generate clean HTML, CSS, and JavaScript if required.
+- Use comments where helpful.
+- Follow modern frontend best practices.
+- Keep the design minimal, calm, professional, and production-ready.
+
+Start by designing the main UI screen and briefly explain the reasoning behind key design decisions.
