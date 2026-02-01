@@ -5,6 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 import { 
   Home,
   Heart,
@@ -16,12 +21,21 @@ import {
   Activity,
   Brain,
   ChevronRight,
-  User,
   Stethoscope,
-  FileText,
-  Camera
+  Camera,
+  MessageCircle,
+  ThumbsUp,
+  ThumbsDown,
+  Shield
 } from "lucide-react";
-import type { HealthCheckCase, DiagnosisResult, PreventiveGuidance } from "@shared/schema";
+import type { HealthCheckCase } from "@shared/schema";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
+// ========================
+// SECTION 7 & 8: OUTPUT TO USER + NEXT STEPS
+// Reference: Spec Sections 7 and 8
+// ========================
 
 const doshaColors = {
   vata: "bg-blue-500",
@@ -35,7 +49,7 @@ const doshaTextColors = {
   kapha: "text-green-600 dark:text-green-400",
 };
 
-const riskColors = {
+const riskBadgeColors = {
   low: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
   medium: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
   high: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
@@ -44,363 +58,383 @@ const riskColors = {
 export default function HealthCheckResults() {
   const [, navigate] = useLocation();
   const [caseData, setCaseData] = useState<HealthCheckCase | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("healthCheckCase");
     if (stored) {
-      setCaseData(JSON.parse(stored));
+      try {
+        setCaseData(JSON.parse(stored));
+      } catch (e) {
+        navigate("/health-check");
+      }
     } else {
       navigate("/health-check");
     }
   }, [navigate]);
 
-  if (!caseData || !caseData.diagnosisResult) {
+  // Feedback mutation - Section 11
+  const feedbackMutation = useMutation({
+    mutationFn: async (wasHelpful: boolean) => {
+      if (!caseData) return;
+      const response = await apiRequest("POST", `/api/case/${caseData.id}/feedback`, {
+        wasHelpful,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      setFeedbackSubmitted(true);
+    },
+  });
+
+  if (!caseData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="container mx-auto px-6 py-12 text-center">
+        <p>Loading results...</p>
       </div>
     );
   }
 
-  const { diagnosisResult, preventiveGuidance, userContext } = caseData;
-  const { ayurvedicAssessment, possibleConditions, confidence, riskLevel, requiresAdvancedInputs, requiredInputTypes, redFlags } = diagnosisResult;
-
-  const renderHealthSnapshot = () => (
-    <Card className="overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10 pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Heart className="w-5 h-5 text-primary" />
-              Health Snapshot
-            </CardTitle>
-            <CardDescription>Your personalized health overview</CardDescription>
-          </div>
-          <Badge className={riskColors[riskLevel]} data-testid="badge-risk-level">
-            {riskLevel === "low" ? "Low Risk" : riskLevel === "medium" ? "Moderate Risk" : "Elevated Risk"}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="p-6 space-y-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center p-4 rounded-lg bg-muted/30">
-            <div className={`text-2xl font-bold ${doshaTextColors[ayurvedicAssessment.prakriti]}`}>
-              {ayurvedicAssessment.prakriti.charAt(0).toUpperCase() + ayurvedicAssessment.prakriti.slice(1)}
-            </div>
-            <div className="text-sm text-muted-foreground">Constitution (Prakriti)</div>
-          </div>
-          <div className="text-center p-4 rounded-lg bg-muted/30">
-            <div className={`text-2xl font-bold ${doshaTextColors[ayurvedicAssessment.vikriti]}`}>
-              {ayurvedicAssessment.vikriti.charAt(0).toUpperCase() + ayurvedicAssessment.vikriti.slice(1)}
-            </div>
-            <div className="text-sm text-muted-foreground">Current Imbalance (Vikriti)</div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <div className="text-sm font-medium">Dosha Balance</div>
-          {(["vata", "pitta", "kapha"] as const).map(dosha => (
-            <div key={dosha} className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span className="capitalize">{dosha}</span>
-                <span>{ayurvedicAssessment.doshaBalance[dosha]}%</span>
-              </div>
-              <Progress 
-                value={ayurvedicAssessment.doshaBalance[dosha]} 
-                className={`h-2 ${doshaColors[dosha]}`}
-              />
-            </div>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-          <span className="text-sm">Analysis Confidence</span>
-          <div className="flex items-center gap-2">
-            <Progress value={confidence} className="w-20 h-2" />
-            <span className="text-sm font-medium">{confidence}%</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const renderConditions = () => (
-    possibleConditions.length > 0 && (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Stethoscope className="w-5 h-5 text-primary" />
-            Health Observations
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {possibleConditions.map((condition, idx) => (
-            <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-              <div>
-                <div className="font-medium">{condition.name}</div>
-                <div className="text-sm text-muted-foreground">{condition.category}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-medium">{condition.confidence}% match</div>
-                {condition.relatedDosha && (
-                  <Badge variant="outline" className="text-xs">
-                    {condition.relatedDosha}
-                  </Badge>
-                )}
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    )
-  );
-
-  const renderAdvancedInputsNeeded = () => (
-    requiresAdvancedInputs && (
-      <Card className="border-yellow-500/50 bg-yellow-50/50 dark:bg-yellow-900/10">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base text-yellow-700 dark:text-yellow-400">
-            <Camera className="w-5 h-5" />
-            Additional Information Needed
-          </CardTitle>
-          <CardDescription>
-            To provide more accurate insights, we recommend submitting the following:
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {requiredInputTypes.map((type, idx) => (
-            <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-background">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-                  <Camera className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                </div>
-                <div>
-                  <div className="font-medium capitalize">{type.replace("_", " ")} {type !== "doctor_consultation" ? "Image" : ""}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {type === "skin" && "Clear photo of affected skin area"}
-                    {type === "tongue" && "Photo of your tongue in natural light"}
-                    {type === "face" && "Front-facing photo of your face"}
-                    {type === "doctor_consultation" && "Speak with a healthcare provider"}
-                  </div>
-                </div>
-              </div>
-              <Button variant="outline" size="sm" disabled>
-                Upload
-              </Button>
-            </div>
-          ))}
-          <p className="text-xs text-muted-foreground mt-2">
-            Note: Medicine recommendations require these additional inputs for safety.
-          </p>
-        </CardContent>
-      </Card>
-    )
-  );
-
-  const renderRedFlags = () => (
-    redFlags.length > 0 && (
-      <Card className="border-red-500/50 bg-red-50/50 dark:bg-red-900/10">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base text-red-700 dark:text-red-400">
-            <AlertTriangle className="w-5 h-5" />
-            Important Notices
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2">
-            {redFlags.map((flag, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-sm">
-                <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                <span>{flag}</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-    )
-  );
-
-  const renderPreventiveGuidance = () => (
-    preventiveGuidance && (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Leaf className="w-5 h-5 text-primary" />
-            Preventive Guidance
-          </CardTitle>
-          <CardDescription>Personalized recommendations for your wellness</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {preventiveGuidance.habits.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 font-medium">
-                <Activity className="w-4 h-4 text-primary" />
-                Daily Habits
-              </div>
-              <ul className="space-y-1 ml-6">
-                {preventiveGuidance.habits.map((habit, idx) => (
-                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                    {habit}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {preventiveGuidance.foodPreferences.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 font-medium">
-                <Utensils className="w-4 h-4 text-primary" />
-                Food Preferences
-              </div>
-              <ul className="space-y-1 ml-6">
-                {preventiveGuidance.foodPreferences.map((food, idx) => (
-                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                    {food}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {preventiveGuidance.sleepTips.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 font-medium">
-                <Moon className="w-4 h-4 text-primary" />
-                Sleep Tips
-              </div>
-              <ul className="space-y-1 ml-6">
-                {preventiveGuidance.sleepTips.map((tip, idx) => (
-                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                    {tip}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {preventiveGuidance.stressTips.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 font-medium">
-                <Brain className="w-4 h-4 text-primary" />
-                Stress Management
-              </div>
-              <ul className="space-y-1 ml-6">
-                {preventiveGuidance.stressTips.map((tip, idx) => (
-                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                    {tip}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {preventiveGuidance.warnings.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 font-medium text-yellow-600 dark:text-yellow-400">
-                <AlertTriangle className="w-4 h-4" />
-                Things to Avoid
-              </div>
-              <ul className="space-y-1 ml-6">
-                {preventiveGuidance.warnings.map((warning, idx) => (
-                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                    <AlertTriangle className="w-4 h-4 text-yellow-500 mt-0.5 shrink-0" />
-                    {warning}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    )
-  );
-
-  const renderNextSteps = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">What Would You Like to Do?</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <Button 
-          className="w-full justify-between" 
-          variant="outline"
-          onClick={() => navigate("/")}
-          data-testid="button-lifestyle-only"
-        >
-          <span className="flex items-center gap-2">
-            <Leaf className="w-4 h-4" />
-            Continue with Lifestyle & Prevention
-          </span>
-          <ChevronRight className="w-4 h-4" />
-        </Button>
-
-        <Button 
-          className="w-full justify-between" 
-          variant="outline"
-          disabled={requiresAdvancedInputs}
-          data-testid="button-get-medicines"
-        >
-          <span className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            Get Medicine Recommendations
-            {requiresAdvancedInputs && <Badge variant="secondary" className="ml-2 text-xs">Requires Additional Input</Badge>}
-          </span>
-          <ChevronRight className="w-4 h-4" />
-        </Button>
-
-        <Button 
-          className="w-full justify-between" 
-          variant="outline"
-          data-testid="button-consult-doctor"
-        >
-          <span className="flex items-center gap-2">
-            <User className="w-4 h-4" />
-            Consult a Practitioner
-          </span>
-          <ChevronRight className="w-4 h-4" />
-        </Button>
-      </CardContent>
-    </Card>
-  );
+  const { healthSnapshot, preventiveGuidance, diagnosisResult, nextStepsOptions, confirmationGate, medicalAwareness } = caseData;
+  const ayurvedic = diagnosisResult?.ayurvedicAssessment;
+  const medical = diagnosisResult?.medicalAssessment;
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <div className="container mx-auto px-4 py-6 max-w-lg space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-serif font-bold">Your Health Analysis</h1>
-          <p className="text-muted-foreground">Based on your responses and Ayurvedic principles</p>
+    <div className="container mx-auto px-6 py-8 max-w-2xl">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+        <h1 className="text-2xl font-serif font-bold mb-2">Your Health Insights</h1>
+        <p className="text-muted-foreground">
+          Based on Ayurvedic analysis and AI screening
+        </p>
+      </div>
+
+      {/* Section 7.1: Health Snapshot */}
+      {healthSnapshot && (
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Heart className="w-5 h-5 text-primary" />
+              <CardTitle>Health Snapshot</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">{healthSnapshot.summary}</p>
+
+            {/* Dosha Imbalance */}
+            <div className="bg-muted/50 rounded-lg p-4">
+              <p className="text-sm font-medium mb-2">Dosha Imbalance Detected</p>
+              <div className="flex items-center gap-3">
+                <Badge className={`${doshaColors[healthSnapshot.doshaImbalance.primary]} text-white capitalize`}>
+                  {healthSnapshot.doshaImbalance.primary}
+                </Badge>
+                <span className="text-sm capitalize">{healthSnapshot.doshaImbalance.level} level</span>
+              </div>
+            </div>
+
+            {/* Dosha Visualization */}
+            <div className="space-y-3">
+              <p className="text-sm font-medium">Current Balance</p>
+              {(["vata", "pitta", "kapha"] as const).map((dosha) => (
+                <div key={dosha} className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="capitalize">{dosha}</span>
+                    <span>{healthSnapshot.doshaVisualization[dosha]}%</span>
+                  </div>
+                  <Progress
+                    value={healthSnapshot.doshaVisualization[dosha]}
+                    className="h-2"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Risk Level */}
+            {medical && (
+              <div className="flex items-center gap-2 pt-2">
+                <span className="text-sm font-medium">Risk Level:</span>
+                <Badge className={riskBadgeColors[medical.riskLevel]}>
+                  {medical.riskLevel.toUpperCase()}
+                </Badge>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Section 4: Confirmation Gate Warning */}
+      {confirmationGate?.triggered && !confirmationGate.inputsProvided && (
+        <Alert className="mb-6 border-yellow-500">
+          <AlertTriangle className="h-4 w-4 text-yellow-500" />
+          <AlertTitle>Additional Verification Needed</AlertTitle>
+          <AlertDescription>
+            <p className="mb-3">
+              For more accurate guidance, the following inputs are recommended:
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              {confirmationGate.requiredInputs.map((input) => (
+                <li key={input} className="capitalize">
+                  {input.replace("_", " ")}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Until these are provided, medicine recommendations are not available.
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Section 7.2: Preventive Guidance (NOT prescriptions) */}
+      {preventiveGuidance && (
+        <div className="space-y-4 mb-6">
+          <h2 className="text-lg font-serif font-bold flex items-center gap-2">
+            <Leaf className="w-5 h-5 text-primary" />
+            Preventive Guidance
+          </h2>
+
+          {/* Habits */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Activity className="w-4 h-4" />
+                Lifestyle Habits
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {preventiveGuidance.habits.map((habit, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                    <span>{habit}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Food Preferences (NOT prescriptions) */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Utensils className="w-4 h-4" />
+                Food Preferences
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Dietary suggestions based on your constitution
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {preventiveGuidance.foodPreferences.map((food, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                    <span>{food}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Sleep & Stress Tips */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Moon className="w-4 h-4" />
+                  Sleep Tips
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {preventiveGuidance.sleepTips.map((tip, i) => (
+                    <li key={i} className="text-sm text-muted-foreground">
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Brain className="w-4 h-4" />
+                  Stress Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {preventiveGuidance.stressTips.map((tip, i) => (
+                    <li key={i} className="text-sm text-muted-foreground">
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
         </div>
+      )}
 
-        {renderHealthSnapshot()}
-        {renderRedFlags()}
-        {renderAdvancedInputsNeeded()}
-        {renderConditions()}
-        {renderPreventiveGuidance()}
+      {/* Section 7.3: Medical Awareness */}
+      {medicalAwareness && (
+        <Card className="mb-6 border-blue-200 dark:border-blue-900">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Shield className="w-4 h-4 text-blue-500" />
+              Medical Awareness
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {medical?.redFlags && medical.redFlags.length > 0 && (
+              <div>
+                <p className="text-sm font-medium mb-2 text-yellow-600">Important Notes:</p>
+                <ul className="space-y-1">
+                  {medical.redFlags.map((flag, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <AlertTriangle className="w-4 h-4 text-yellow-500 mt-0.5 shrink-0" />
+                      <span>{flag}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div>
+              <p className="text-sm font-medium mb-2">When to Seek Help:</p>
+              <ul className="space-y-1">
+                {medicalAwareness.whenToSeekHelp.slice(0, 3).map((item, i) => (
+                  <li key={i} className="text-sm text-muted-foreground">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        <Separator />
+      {/* Disclaimer - Required by Spec Section 7 */}
+      <Alert className="mb-6">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Important Disclaimer</AlertTitle>
+        <AlertDescription className="text-sm">
+          This is not a medical diagnosis. The information provided is for educational
+          and preventive wellness purposes only. Always consult a qualified healthcare
+          professional for medical advice, diagnosis, or treatment.
+        </AlertDescription>
+      </Alert>
 
-        {renderNextSteps()}
+      {/* Section 8: Next Steps Options */}
+      {nextStepsOptions && (
+        <div className="space-y-4 mb-8">
+          <h2 className="text-lg font-serif font-bold">Next Steps</h2>
 
-        <div className="p-4 bg-muted/30 rounded-lg">
-          <p className="text-xs text-muted-foreground text-center">
-            <strong>Disclaimer:</strong> This is not a medical diagnosis. The information provided is for educational purposes and based on Ayurvedic wellness principles. Always consult a qualified healthcare provider for medical advice, diagnosis, or treatment.
-          </p>
+          {/* A. Lifestyle & Prevention (always enabled) */}
+          <Button
+            className="w-full h-auto py-4 justify-start gap-4"
+            variant="default"
+            onClick={() => navigate("/")}
+            data-testid="button-lifestyle-only"
+          >
+            <Leaf className="w-6 h-6 shrink-0" />
+            <div className="text-left">
+              <span className="font-medium block">Lifestyle & Prevention</span>
+              <span className="text-xs opacity-80">
+                Continue with personalized wellness guidance
+              </span>
+            </div>
+            <ChevronRight className="w-5 h-5 ml-auto shrink-0" />
+          </Button>
+
+          {/* B. Get Medicines (conditionally enabled) */}
+          <Button
+            className="w-full h-auto py-4 justify-start gap-4"
+            variant="outline"
+            disabled={!nextStepsOptions.medicinesEnabled}
+            data-testid="button-get-medicines"
+          >
+            <Stethoscope className="w-6 h-6 shrink-0" />
+            <div className="text-left">
+              <span className="font-medium block">Get Medicines</span>
+              <span className="text-xs opacity-70">
+                {nextStepsOptions.medicinesEnabled
+                  ? "Doctor-verified recommendations only"
+                  : nextStepsOptions.medicinesDisabledReason || "Requires additional verification"}
+              </span>
+            </div>
+            <ChevronRight className="w-5 h-5 ml-auto shrink-0" />
+          </Button>
+
+          {/* C. Consult Doctor First */}
+          <Button
+            className="w-full h-auto py-4 justify-start gap-4"
+            variant="outline"
+            disabled={!nextStepsOptions.consultDoctorEnabled}
+            data-testid="button-consult-doctor"
+          >
+            <MessageCircle className="w-6 h-6 shrink-0" />
+            <div className="text-left">
+              <span className="font-medium block">Consult Doctor First</span>
+              <span className="text-xs opacity-70">
+                Speak with a healthcare practitioner
+              </span>
+            </div>
+            <ChevronRight className="w-5 h-5 ml-auto shrink-0" />
+          </Button>
         </div>
+      )}
 
-        <Button 
-          variant="ghost" 
-          className="w-full"
-          onClick={() => navigate("/")}
-          data-testid="button-go-home"
-        >
-          <Home className="w-4 h-4 mr-2" />
-          Return to Home
-        </Button>
+      {/* Section 11: Feedback Loop */}
+      {!feedbackSubmitted && (
+        <Card className="mb-8">
+          <CardContent className="py-4">
+            <p className="text-sm font-medium mb-3 text-center">Was this helpful?</p>
+            <div className="flex justify-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => feedbackMutation.mutate(true)}
+                disabled={feedbackMutation.isPending}
+                data-testid="button-feedback-yes"
+              >
+                <ThumbsUp className="w-4 h-4 mr-2" />
+                Yes
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => feedbackMutation.mutate(false)}
+                disabled={feedbackMutation.isPending}
+                data-testid="button-feedback-no"
+              >
+                <ThumbsDown className="w-4 h-4 mr-2" />
+                No
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {feedbackSubmitted && (
+        <Card className="mb-8 bg-green-50 dark:bg-green-900/20">
+          <CardContent className="py-4 text-center">
+            <CheckCircle2 className="w-6 h-6 text-green-500 mx-auto mb-2" />
+            <p className="text-sm">Thank you for your feedback!</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Back to Home */}
+      <div className="text-center">
+        <Link href="/">
+          <Button variant="ghost" data-testid="button-back-home">
+            <Home className="w-4 h-4 mr-2" />
+            Back to Home
+          </Button>
+        </Link>
       </div>
     </div>
   );
