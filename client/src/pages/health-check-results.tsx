@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import {
   Alert,
   AlertDescription,
@@ -26,7 +26,9 @@ import {
   MessageCircle,
   ThumbsUp,
   ThumbsDown,
-  Shield
+  Shield,
+  Upload,
+  Loader2
 } from "lucide-react";
 import type { HealthCheckCase } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
@@ -43,23 +45,25 @@ const doshaColors = {
   kapha: "bg-green-500",
 };
 
-const doshaTextColors = {
-  vata: "text-blue-600 dark:text-blue-400",
-  pitta: "text-red-600 dark:text-red-400",
-  kapha: "text-green-600 dark:text-green-400",
-};
-
 const riskBadgeColors = {
   low: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
   medium: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
   high: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 
+const inputTypeLabels: Record<string, { label: string; description: string; icon: typeof Camera }> = {
+  skin_image: { label: "Skin Photo", description: "Upload a clear photo of affected skin area", icon: Camera },
+  tongue_image: { label: "Tongue Photo", description: "Upload a photo of your tongue for assessment", icon: Camera },
+  doctor_consultation: { label: "Doctor Consultation", description: "Schedule a consultation with a practitioner", icon: MessageCircle },
+};
+
 export default function HealthCheckResults() {
   const [, navigate] = useLocation();
   const [caseData, setCaseData] = useState<HealthCheckCase | null>(null);
-  const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [uploadedInputs, setUploadedInputs] = useState<Record<string, boolean>>({});
+  const [isSubmittingInputs, setIsSubmittingInputs] = useState(false);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
     const stored = localStorage.getItem("healthCheckCase");
@@ -88,6 +92,44 @@ export default function HealthCheckResults() {
     },
   });
 
+  // Advanced inputs submission - Section 4
+  const advancedInputsMutation = useMutation({
+    mutationFn: async (inputs: { skinImage?: string; tongueImage?: string; doctorConsultScheduled?: boolean }) => {
+      if (!caseData) return;
+      const response = await apiRequest("POST", `/api/case/${caseData.id}/advanced-inputs`, inputs);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data) {
+        setCaseData(data);
+        localStorage.setItem("healthCheckCase", JSON.stringify(data));
+      }
+    },
+  });
+
+  const handleFileUpload = (inputType: string) => {
+    // Simulate file upload (stub - would integrate with actual file upload service)
+    setUploadedInputs(prev => ({ ...prev, [inputType]: true }));
+  };
+
+  const handleSubmitAdvancedInputs = async () => {
+    setIsSubmittingInputs(true);
+    const inputs: { skinImage?: string; tongueImage?: string; doctorConsultScheduled?: boolean } = {};
+    
+    if (uploadedInputs.skin_image) {
+      inputs.skinImage = "uploaded_skin_image_placeholder.jpg";
+    }
+    if (uploadedInputs.tongue_image) {
+      inputs.tongueImage = "uploaded_tongue_image_placeholder.jpg";
+    }
+    if (uploadedInputs.doctor_consultation) {
+      inputs.doctorConsultScheduled = true;
+    }
+    
+    await advancedInputsMutation.mutateAsync(inputs);
+    setIsSubmittingInputs(false);
+  };
+
   if (!caseData) {
     return (
       <div className="container mx-auto px-6 py-12 text-center">
@@ -97,15 +139,18 @@ export default function HealthCheckResults() {
   }
 
   const { healthSnapshot, preventiveGuidance, diagnosisResult, nextStepsOptions, confirmationGate, medicalAwareness } = caseData;
-  const ayurvedic = diagnosisResult?.ayurvedicAssessment;
   const medical = diagnosisResult?.medicalAssessment;
+
+  const allRequiredInputsProvided = confirmationGate?.requiredInputs.every(
+    input => uploadedInputs[input]
+  ) ?? false;
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-2xl">
       {/* Header */}
       <div className="text-center mb-8">
         <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-serif font-bold mb-2">Your Health Insights</h1>
+        <h1 className="text-2xl font-serif font-bold mb-2" data-testid="text-results-heading">Your Health Insights</h1>
         <p className="text-muted-foreground">
           Based on Ayurvedic analysis and AI screening
         </p>
@@ -113,7 +158,7 @@ export default function HealthCheckResults() {
 
       {/* Section 7.1: Health Snapshot */}
       {healthSnapshot && (
-        <Card className="mb-6">
+        <Card className="mb-6" data-testid="card-health-snapshot">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Heart className="w-5 h-5 text-primary" />
@@ -164,25 +209,112 @@ export default function HealthCheckResults() {
         </Card>
       )}
 
-      {/* Section 4: Confirmation Gate Warning */}
+      {/* Section 4: Confirmation Gate - Advanced Inputs UI */}
       {confirmationGate?.triggered && !confirmationGate.inputsProvided && (
-        <Alert className="mb-6 border-yellow-500">
-          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-          <AlertTitle>Additional Verification Needed</AlertTitle>
-          <AlertDescription>
-            <p className="mb-3">
-              For more accurate guidance, the following inputs are recommended:
+        <Card className="mb-6 border-yellow-500/50" data-testid="card-confirmation-gate">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-yellow-500" />
+              <CardTitle className="text-lg">Additional Verification Needed</CardTitle>
+            </div>
+            <CardDescription>
+              For more accurate guidance and to unlock medicine recommendations, please provide the following:
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {confirmationGate.requiredInputs.map((inputType) => {
+              const inputInfo = inputTypeLabels[inputType] || { 
+                label: inputType.replace("_", " "), 
+                description: "Required for accurate diagnosis",
+                icon: Camera 
+              };
+              const IconComponent = inputInfo.icon;
+              const isUploaded = uploadedInputs[inputType];
+
+              return (
+                <div key={inputType} className="flex items-center gap-4 p-3 border rounded-lg">
+                  <div className={`p-2 rounded-full ${isUploaded ? "bg-green-100 dark:bg-green-900/30" : "bg-muted"}`}>
+                    {isUploaded ? (
+                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <IconComponent className="w-5 h-5 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{inputInfo.label}</p>
+                    <p className="text-xs text-muted-foreground">{inputInfo.description}</p>
+                  </div>
+                  {inputType === "doctor_consultation" ? (
+                    <Button
+                      variant={isUploaded ? "secondary" : "outline"}
+                      size="sm"
+                      onClick={() => handleFileUpload(inputType)}
+                      disabled={isUploaded}
+                      data-testid={`button-schedule-${inputType}`}
+                    >
+                      {isUploaded ? "Scheduled" : "Schedule"}
+                    </Button>
+                  ) : (
+                    <>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        ref={el => fileInputRefs.current[inputType] = el}
+                        onChange={() => handleFileUpload(inputType)}
+                        data-testid={`input-file-${inputType}`}
+                      />
+                      <Button
+                        variant={isUploaded ? "secondary" : "outline"}
+                        size="sm"
+                        onClick={() => fileInputRefs.current[inputType]?.click()}
+                        disabled={isUploaded}
+                        data-testid={`button-upload-${inputType}`}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        {isUploaded ? "Uploaded" : "Upload"}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+
+            {allRequiredInputsProvided && (
+              <Button
+                className="w-full"
+                onClick={handleSubmitAdvancedInputs}
+                disabled={isSubmittingInputs}
+                data-testid="button-submit-advanced-inputs"
+              >
+                {isSubmittingInputs ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Submit for Enhanced Analysis
+                  </>
+                )}
+              </Button>
+            )}
+
+            <p className="text-xs text-muted-foreground text-center">
+              Medicine recommendations will be enabled after verification is complete.
             </p>
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              {confirmationGate.requiredInputs.map((input) => (
-                <li key={input} className="capitalize">
-                  {input.replace("_", " ")}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Until these are provided, medicine recommendations are not available.
-            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Confirmation Gate - Inputs Provided Success */}
+      {confirmationGate?.triggered && confirmationGate.inputsProvided && (
+        <Alert className="mb-6 border-green-500">
+          <CheckCircle2 className="h-4 w-4 text-green-500" />
+          <AlertTitle>Verification Complete</AlertTitle>
+          <AlertDescription className="text-sm">
+            Your advanced inputs have been reviewed. Medicine recommendations are now available.
           </AlertDescription>
         </Alert>
       )}
@@ -349,11 +481,12 @@ export default function HealthCheckResults() {
             <ChevronRight className="w-5 h-5 ml-auto shrink-0" />
           </Button>
 
-          {/* B. Get Medicines (conditionally enabled) */}
+          {/* B. Get Medicines (conditionally enabled) - Links to stub page */}
           <Button
             className="w-full h-auto py-4 justify-start gap-4"
             variant="outline"
             disabled={!nextStepsOptions.medicinesEnabled}
+            onClick={() => nextStepsOptions.medicinesEnabled && navigate("/medicines")}
             data-testid="button-get-medicines"
           >
             <Stethoscope className="w-6 h-6 shrink-0" />
@@ -368,11 +501,11 @@ export default function HealthCheckResults() {
             <ChevronRight className="w-5 h-5 ml-auto shrink-0" />
           </Button>
 
-          {/* C. Consult Doctor First */}
+          {/* C. Consult Doctor First - Links to stub page */}
           <Button
             className="w-full h-auto py-4 justify-start gap-4"
             variant="outline"
-            disabled={!nextStepsOptions.consultDoctorEnabled}
+            onClick={() => navigate("/consult")}
             data-testid="button-consult-doctor"
           >
             <MessageCircle className="w-6 h-6 shrink-0" />

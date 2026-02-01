@@ -9,6 +9,8 @@ import HealthCheck from "@/pages/health-check";
 import HealthCheckResults from "@/pages/health-check-results";
 import BodyType from "@/pages/body-type";
 import AdminDashboard from "@/pages/admin";
+import ConsultDoctor from "@/pages/consult";
+import Medicines from "@/pages/medicines";
 import NotFound from "@/pages/not-found";
 import { Leaf } from "lucide-react";
 
@@ -59,6 +61,8 @@ function Router() {
       <Route path="/health-check/results" component={HealthCheckResults} />
       <Route path="/body-type" component={BodyType} />
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/consult" component={ConsultDoctor} />
+      <Route path="/medicines" component={Medicines} />
       <Route component={NotFound} />
     </Switch>
   );
