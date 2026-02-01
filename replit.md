@@ -159,3 +159,15 @@ Frontend and backend are served on port 5000.
 - All spec sections implemented with stubs for future AI models
 - Safety-first design with confirmation gate
 - In-memory storage (ready for database migration)
+
+## UI/UX Design System (Updated Feb 2026)
+- **Theme**: Modern whiteish-green Ayurvedic aesthetic
+- **Color Palette**:
+  - Background: #FBFDF9 (near-white with green tint)
+  - Cards/Panels: #F1F8F0 (soft green)
+  - Accent surfaces: #D9EFE0 (mid green)
+  - Primary brand: #2E8B5A (main green CTA)
+  - Headlines: #114D33 (deep green)
+  - Muted text: #3E5A4C (secondary text)
+- **Typography**: Serif for headlines (hierarchy), sans-serif for body text
+- **Design Principles**: Clear visual hierarchy, consistent spacing, sufficient contrast, responsive layouts
