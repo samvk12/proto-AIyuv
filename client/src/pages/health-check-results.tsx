@@ -541,47 +541,44 @@ export default function HealthCheckResults() {
           </div>
         )}
 
-        {/* Next Steps Options */}
-        {nextStepsOptions && (
-          <div className="space-y-4 mb-8">
-            <h2 className="text-lg font-serif font-bold">Recommended Paths</h2>
+      {/* Section 8: Next Steps Options */}
+      {nextStepsOptions && (
+        <div className="space-y-4 mb-8">
+          <h2 className="text-lg font-serif font-bold">Recommended Paths</h2>
 
-            <Button
-              className="w-full h-auto py-4 justify-start gap-4"
-              variant="default"
-              onClick={() => navigate("/")}
-              data-testid="button-lifestyle-only"
-            >
-              <Leaf className="w-6 h-6 shrink-0" />
-              <div className="text-left">
-                <span className="font-medium block">Lifestyle & Prevention</span>
-                <span className="text-xs opacity-80">
-                  Continue with personalized wellness guidance
-                </span>
-              </div>
-              <ChevronRight className="w-5 h-5 ml-auto shrink-0" />
-            </Button>
+          <Button
+            className="w-full h-auto py-4 justify-start gap-4"
+            variant="default"
+            onClick={() => navigate("/health-check")}
+            data-testid="button-lifestyle-only"
+          >
+            <Leaf className="w-6 h-6 shrink-0" />
+            <div className="text-left">
+              <span className="font-medium block">Current Discomfort</span>
+              <span className="text-xs opacity-80">
+                Address current symptoms through a new diagnosis flow
+              </span>
+            </div>
+            <ChevronRight className="w-5 h-5 ml-auto shrink-0" />
+          </Button>
 
-            <Button
-              className="w-full h-auto py-4 justify-start gap-4"
-              variant="outline"
-              disabled={!nextStepsOptions.medicinesEnabled}
-              onClick={() => nextStepsOptions.medicinesEnabled && navigate("/medicines")}
-              data-testid="button-get-medicines"
-            >
-              <Stethoscope className="w-6 h-6 shrink-0" />
-              <div className="text-left">
-                <span className="font-medium block">Get Medicines</span>
-                <span className="text-xs opacity-70">
-                  {nextStepsOptions.medicinesEnabled
-                    ? "Doctor-verified recommendations only"
-                    : nextStepsOptions.medicinesDisabledReason || "Requires additional verification"}
-                </span>
-              </div>
-              <ChevronRight className="w-5 h-5 ml-auto shrink-0" />
-            </Button>
-          </div>
-        )}
+          <Button
+            className="w-full h-auto py-4 justify-start gap-4"
+            variant="outline"
+            onClick={() => navigate("/")}
+            data-testid="button-back-dashboard"
+          >
+            <Home className="w-6 h-6 shrink-0 text-primary" />
+            <div className="text-left">
+              <span className="font-medium block">Lifestyle & Prevention</span>
+              <span className="text-xs opacity-70">
+                Continue with personalized wellness guidance
+              </span>
+            </div>
+            <ChevronRight className="w-5 h-5 ml-auto shrink-0" />
+          </Button>
+        </div>
+      )}
 
         {/* Section 11: Feedback Loop */}
         {!feedbackSubmitted && (
