@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Home from "@/pages/home";
+import UserSelection from "@/pages/user-selection";
 import HealthCheck from "@/pages/health-check";
 import HealthCheckResults from "@/pages/health-check-results";
 import BodyType from "@/pages/body-type";
@@ -62,7 +63,8 @@ function Header() {
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={UserSelection} />
+      <Route path="/home" component={Home} />
       <Route path="/health-check" component={HealthCheck} />
       <Route path="/health-check/results" component={HealthCheckResults} />
       <Route path="/body-type" component={BodyType} />
