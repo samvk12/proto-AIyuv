@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useLocation, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,11 +46,14 @@ import {
   ArrowLeft,
   ArrowRight,
   Flame,
-  Wind
+  Wind,
+  ShoppingCart,
+  Lock
 } from "lucide-react";
 import type { HealthCheckCase } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { symptoms, symptomSpecificQuestions, getSymptomById } from "@shared/symptoms-data";
 
 // ========================
 // SECTION 7 & 8: OUTPUT TO USER + NEXT STEPS
@@ -61,12 +64,6 @@ const doshaColors = {
   vata: "bg-blue-500",
   pitta: "bg-red-500",
   kapha: "bg-primary",
-};
-
-const riskBadgeColors = {
-  low: "bg-accent text-primary dark:bg-accent dark:text-primary",
-  medium: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-  high: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 
 const inputTypeLabels: Record<string, { label: string; description: string; icon: typeof Camera }> = {
@@ -85,17 +82,24 @@ const healthProgressData = [
   { day: "Sun", sleep: 8, steps: 10000, calories: 1950 },
 ];
 
+const medicineRecommendations = [
+  { id: 1, name: "Triphala Churna", type: "Herbal", price: "$15.00", description: "Digestive support and detox." },
+  { id: 2, name: "Brahmi Vati", type: "Herbal", price: "$22.00", description: "Memory and stress management." },
+  { id: 3, name: "Ashwagandha", type: "Herbal", price: "$18.00", description: "Strength and vitality booster." }
+];
+
 export default function HealthCheckResults() {
   const [, navigate] = useLocation();
   const [caseData, setCaseData] = useState<HealthCheckCase | null>(null);
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [uploadedInputs, setUploadedInputs] = useState<Record<string, boolean>>({});
-  const [isSubmittingInputs, setIsSubmittingInputs] = useState(false);
   const [goalStatus, setGoalStatus] = useState<"yes" | "no" | null>(null);
   const [activeSection, setActiveSection] = useState<"dashboard" | "diagnosis" | "prevention">("dashboard");
-  const [diagnosisStep, setDiagnosisStep] = useState<"symptom" | "intensity" | "analysis">("symptom");
+  const [diagnosisStep, setDiagnosisStep] = useState<"symptom" | "intensity" | "questions" | "verification" | "analysis">("symptom");
   const [selectedDiagnosisSymptom, setSelectedDiagnosisSymptom] = useState<number | null>(null);
   const [intensityValue, setIntensityValue] = useState<number>(5);
+  const [specificAnswers, setSpecificAnswers] = useState<Record<string, number>>({});
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
@@ -111,56 +115,34 @@ export default function HealthCheckResults() {
     }
   }, [navigate]);
 
-  // Feedback mutation - Section 11
-  const feedbackMutation = useMutation({
-    mutationFn: async (wasHelpful: boolean) => {
-      if (!caseData) return;
-      const response = await apiRequest("POST", `/api/case/${caseData.id}/feedback`, {
-        wasHelpful,
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      setFeedbackSubmitted(true);
-    },
-  });
+  const selectedSymptomData = useMemo(() => 
+    selectedDiagnosisSymptom ? getSymptomById(selectedDiagnosisSymptom) : null
+  , [selectedDiagnosisSymptom]);
 
-  // Advanced inputs submission - Section 4
-  const advancedInputsMutation = useMutation({
-    mutationFn: async (inputs: { skinImage?: string; tongueImage?: string; doctorConsultScheduled?: boolean }) => {
-      if (!caseData) return;
-      const response = await apiRequest("POST", `/api/case/${caseData.id}/advanced-inputs`, inputs);
-      return response.json();
-    },
-    onSuccess: (data) => {
-      if (data) {
-        setCaseData(data);
-        localStorage.setItem("healthCheckCase", JSON.stringify(data));
-      }
-    },
-  });
+  const currentSymptomQuestions = useMemo(() => 
+    selectedSymptomData ? symptomSpecificQuestions[selectedSymptomData.category] || [] : []
+  , [selectedSymptomData]);
+
+  const severityScore = useMemo(() => {
+    let score = Math.ceil(intensityValue / 2); // 1-10 intensity -> 1-5 score
+    Object.values(specificAnswers).forEach(s => score += s);
+    return score;
+  }, [intensityValue, specificAnswers]);
+
+  const severityLevel = useMemo(() => {
+    if (severityScore <= 3) return "Mild";
+    if (severityScore <= 6) return "Moderate";
+    return "Severe";
+  }, [severityScore]);
+
+  const severityColor = useMemo(() => {
+    if (severityLevel === "Mild") return "text-green-600 bg-green-50 border-green-200";
+    if (severityLevel === "Moderate") return "text-yellow-600 bg-yellow-50 border-yellow-200";
+    return "text-red-600 bg-red-50 border-red-200";
+  }, [severityLevel]);
 
   const handleFileUpload = (inputType: string) => {
-    // Simulate file upload (stub - would integrate with actual file upload service)
     setUploadedInputs(prev => ({ ...prev, [inputType]: true }));
-  };
-
-  const handleSubmitAdvancedInputs = async () => {
-    setIsSubmittingInputs(true);
-    const inputs: { skinImage?: string; tongueImage?: string; doctorConsultScheduled?: boolean } = {};
-    
-    if (uploadedInputs.skin_image) {
-      inputs.skinImage = "uploaded_skin_image_placeholder.jpg";
-    }
-    if (uploadedInputs.tongue_image) {
-      inputs.tongueImage = "uploaded_tongue_image_placeholder.jpg";
-    }
-    if (uploadedInputs.doctor_consultation) {
-      inputs.doctorConsultScheduled = true;
-    }
-    
-    await advancedInputsMutation.mutateAsync(inputs);
-    setIsSubmittingInputs(false);
   };
 
   if (!caseData) {
@@ -171,11 +153,7 @@ export default function HealthCheckResults() {
     );
   }
 
-  const { healthSnapshot, preventiveGuidance, diagnosisResult, confirmationGate } = caseData;
-
-  const allRequiredInputsProvided = confirmationGate?.requiredInputs.every(
-    input => uploadedInputs[input]
-  ) ?? false;
+  const { healthSnapshot, preventiveGuidance, confirmationGate } = caseData;
 
   const dashboardMain = (
     <div className="animate-in fade-in duration-500">
@@ -235,117 +213,16 @@ export default function HealthCheckResults() {
         </Card>
       </div>
 
-      <Card className="mb-8 border-primary/20 bg-primary/5">
-        <CardContent className="py-6">
-          {!goalStatus ? (
-            <div className="text-center">
-              <Target className="w-10 h-10 text-primary mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Daily Goal Review</h3>
-              <p className="text-muted-foreground mb-6">Did you achieve your targets for yesterday?</p>
-              <div className="flex justify-center gap-4">
-                <Button 
-                  size="lg" 
-                  className="px-8"
-                  onClick={() => setGoalStatus("yes")}
-                  data-testid="button-goal-yes"
-                >
-                  Yes, I did!
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="px-8"
-                  onClick={() => setGoalStatus("no")}
-                  data-testid="button-goal-no"
-                >
-                  Not quite
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex items-start gap-4 mb-6">
-                <div className={`p-3 rounded-full ${goalStatus === "yes" ? "bg-green-100" : "bg-blue-100"}`}>
-                  {goalStatus === "yes" ? (
-                    <ThumbsUp className={`w-6 h-6 ${goalStatus === "yes" ? "text-green-600" : "text-blue-600"}`} />
-                  ) : (
-                    <Heart className="w-6 h-6 text-blue-600" />
-                  )}
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold">
-                    {goalStatus === "yes" ? "Great job! Keep the momentum going." : "Small steps lead to big changes. Let's adjust for today."}
-                  </h3>
-                  <p className="text-muted-foreground">
-                    {goalStatus === "yes" ? "Your performance is consistent. Today's plan is optimized for peak performance." : "We've tailored a recovery plan to help you get back on track gently."}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-background border">
-                  <h4 className="font-medium flex items-center gap-2 mb-3">
-                    <Utensils className="w-4 h-4 text-primary" />
-                    Today's Food Preferences
-                  </h4>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    {goalStatus === "yes" ? (
-                      <>
-                        <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-green-500" /> High protein lean breakfast</li>
-                        <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-green-500" /> Complex carbohydrates for lunch</li>
-                        <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-green-500" /> Magnesium-rich evening snack</li>
-                      </>
-                    ) : (
-                      <>
-                        <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-blue-500" /> Warm detox lemon water</li>
-                        <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-blue-500" /> Light steamed vegetables</li>
-                        <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-blue-500" /> Anti-inflammatory turmeric milk</li>
-                      </>
-                    )}
-                  </ul>
-                </div>
-                <div className="p-4 rounded-xl bg-background border">
-                  <h4 className="font-medium flex items-center gap-2 mb-3">
-                    <Activity className="w-4 h-4 text-primary" />
-                    Today's Lifestyle Habits
-                  </h4>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    {goalStatus === "yes" ? (
-                      <>
-                        <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-green-500" /> Increase workout intensity</li>
-                        <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-green-500" /> 15-min focused meditation</li>
-                        <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-green-500" /> Optimize workspace ergonomics</li>
-                      </>
-                    ) : (
-                      <>
-                        <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-blue-500" /> Focus on deep hydration</li>
-                        <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-blue-500" /> 20-min gentle evening walk</li>
-                        <li className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-blue-500" /> Digital detox 1h before bed</li>
-                      </>
-                    )}
-                  </ul>
-                </div>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="mt-4 text-xs"
-                onClick={() => setGoalStatus(null)}
-              >
-                Change response
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       <div className="space-y-4 mb-8">
         <h2 className="text-lg font-serif font-bold">Recommended Paths</h2>
 
         <Button
           className="w-full h-auto py-6 justify-start gap-4 hover-elevate transition-all"
           variant="outline"
-          onClick={() => setActiveSection("diagnosis")}
+          onClick={() => {
+            setActiveSection("diagnosis");
+            setDiagnosisStep("symptom");
+          }}
           data-testid="button-current-discomfort"
         >
           <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
@@ -406,10 +283,31 @@ export default function HealthCheckResults() {
 
       <div className="mb-8">
         <div className="flex justify-between text-sm mb-2">
-          <span className="font-medium">Diagnostic Check</span>
-          <span>Step {diagnosisStep === "symptom" ? 1 : diagnosisStep === "intensity" ? 2 : 3} of 3</span>
+          <span className="font-medium">
+            {diagnosisStep === "symptom" && "Select Symptom"}
+            {diagnosisStep === "intensity" && "Intensity Check"}
+            {diagnosisStep === "questions" && "Detailed Assessment"}
+            {diagnosisStep === "verification" && "Safety Verification"}
+            {diagnosisStep === "analysis" && "Final Result"}
+          </span>
+          <span className="text-muted-foreground">
+            Progress: {
+              diagnosisStep === "symptom" ? "20%" :
+              diagnosisStep === "intensity" ? "40%" :
+              diagnosisStep === "questions" ? "60%" :
+              diagnosisStep === "verification" ? "80%" : "100%"
+            }
+          </span>
         </div>
-        <Progress value={diagnosisStep === "symptom" ? 33 : diagnosisStep === "intensity" ? 66 : 100} className="h-2" />
+        <Progress 
+          value={
+            diagnosisStep === "symptom" ? 20 :
+            diagnosisStep === "intensity" ? 40 :
+            diagnosisStep === "questions" ? 60 :
+            diagnosisStep === "verification" ? 80 : 100
+          } 
+          className="h-2" 
+        />
       </div>
 
       {diagnosisStep === "symptom" && (
@@ -459,15 +357,6 @@ export default function HealthCheckResults() {
           <Card>
             <CardContent className="pt-6 space-y-6">
               <div className="space-y-4">
-                <label className="text-sm font-medium">How long has this lasted?</label>
-                <div className="flex gap-2">
-                  {["Today", "2-3 Days", "1 Week", "Chronic"].map(d => (
-                    <Button key={d} variant="outline" size="sm" className="flex-1 text-xs">{d}</Button>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <label className="text-sm font-medium">Rate the intensity (1-10)</label>
                   <span className="text-2xl font-bold text-primary">{intensityValue}</span>
@@ -489,9 +378,110 @@ export default function HealthCheckResults() {
             </CardContent>
           </Card>
 
-          <Button className="w-full" onClick={() => setDiagnosisStep("analysis")}>
-            Complete Analysis
+          <Button className="w-full" onClick={() => setDiagnosisStep("questions")}>
+            Next: Assessment
             <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      )}
+
+      {diagnosisStep === "questions" && (
+        <div className="space-y-6">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-serif font-bold mb-2">Specific Details</h2>
+            <p className="text-muted-foreground">Help us triage your {selectedSymptomData?.category} symptoms.</p>
+          </div>
+
+          <div className="space-y-4">
+            {currentSymptomQuestions.map((q) => (
+              <Card key={q.id}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">{q.text}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {q.options.map((opt) => (
+                      <Button
+                        key={opt.label}
+                        variant={specificAnswers[q.id] === opt.score ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSpecificAnswers(prev => ({ ...prev, [q.id]: opt.score }))}
+                      >
+                        {opt.label}
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <Button 
+            className="w-full mt-6" 
+            disabled={Object.keys(specificAnswers).length < currentSymptomQuestions.length}
+            onClick={() => setDiagnosisStep("verification")}
+          >
+            Review Safety Check
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      )}
+
+      {diagnosisStep === "verification" && (
+        <div className="space-y-6">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-serif font-bold mb-2">Safety Verification</h2>
+            <p className="text-muted-foreground">Upload required data for final confirmation.</p>
+          </div>
+
+          <Card className={`border-2 ${severityColor}`}>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3 mb-2">
+                <AlertTriangle className="w-5 h-5" />
+                <span className="font-bold">Detected Severity: {severityLevel}</span>
+              </div>
+              <p className="text-sm opacity-90">
+                {severityLevel === "Mild" 
+                  ? "Your symptoms appear manageable with basic Ayurvedic support." 
+                  : "Due to the intensity of your symptoms, we require verification data before recommending medication."}
+              </p>
+            </CardContent>
+          </Card>
+
+          {confirmationGate?.triggered && (
+            <div className="space-y-4">
+              {confirmationGate.requiredInputs.map((inputType) => {
+                const inputInfo = inputTypeLabels[inputType] || { label: inputType.replace("_", " "), description: "Required", icon: Camera };
+                const isUploaded = uploadedInputs[inputType];
+
+                return (
+                  <div key={inputType} className="flex items-center gap-4 p-3 border rounded-lg bg-background">
+                    <div className={`p-2 rounded-full ${isUploaded ? "bg-green-100" : "bg-muted"}`}>
+                      {isUploaded ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : <inputInfo.icon className="w-5 h-5 text-muted-foreground" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{inputInfo.label}</p>
+                    </div>
+                    <Button
+                      variant={isUploaded ? "secondary" : "outline"}
+                      size="sm"
+                      onClick={() => inputType === "doctor_consultation" ? handleFileUpload(inputType) : fileInputRefs.current[inputType]?.click()}
+                      disabled={isUploaded}
+                    >
+                      {isUploaded ? "Done" : "Upload"}
+                    </Button>
+                    <input type="file" className="hidden" ref={el => fileInputRefs.current[inputType] = el} onChange={() => handleFileUpload(inputType)} />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <Button 
+            className="w-full mt-6" 
+            onClick={() => setDiagnosisStep("analysis")}
+          >
+            Finish Analysis
           </Button>
         </div>
       )}
@@ -499,83 +489,68 @@ export default function HealthCheckResults() {
       {diagnosisStep === "analysis" && (
         <div className="space-y-6 animate-in fade-in duration-700">
           <div className="text-center mb-8">
-            <Badge className="mb-4 bg-green-100 text-green-700 hover:bg-green-100 border-none px-4 py-1">Analysis Complete</Badge>
-            <h2 className="text-2xl font-serif font-bold">Your Diagnostic Results</h2>
+            <Badge className={`mb-4 px-4 py-1 border-none font-bold ${severityColor}`}>
+              Result: {severityLevel} Condition
+            </Badge>
+            <h2 className="text-2xl font-serif font-bold">Recommended Actions</h2>
           </div>
 
-          {healthSnapshot && (
-            <Card className="mb-6 border-primary/20 shadow-sm">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-primary" />
-                  <CardTitle>Ayurvedic Analysis</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground leading-relaxed">{healthSnapshot.summary}</p>
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <p className="text-sm font-medium mb-2">Dosha Imbalance Detected</p>
-                  <div className="flex items-center gap-3">
-                    <Badge className={`${doshaColors[healthSnapshot.doshaImbalance.primary]} text-white capitalize`}>
-                      {healthSnapshot.doshaImbalance.primary}
-                    </Badge>
-                    <span className="text-sm capitalize">{healthSnapshot.doshaImbalance.level} level</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {severityLevel === "Mild" ? (
+            <div className="space-y-6">
+              <Alert className="bg-green-50 border-green-200">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertTitle className="text-green-800">OTC Recommendations Available</AlertTitle>
+                <AlertDescription className="text-green-700">
+                  You can purchase these herbal supplements directly. Please follow the dosage instructions carefully.
+                </AlertDescription>
+              </Alert>
 
-          {confirmationGate?.triggered && !confirmationGate.inputsProvided && (
-            <Card className="mb-6 border-yellow-500/30 bg-yellow-50/30">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-yellow-500" />
-                  <CardTitle className="text-lg">Additional Verification Needed</CardTitle>
-                </div>
-                <CardDescription>
-                  For more accurate guidance and to unlock medicine recommendations, please provide the following:
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {confirmationGate.requiredInputs.map((inputType) => {
-                  const inputInfo = inputTypeLabels[inputType] || { 
-                    label: inputType.replace("_", " "), 
-                    description: "Required for accurate diagnosis",
-                    icon: Camera 
-                  };
-                  const IconComponent = inputInfo.icon;
-                  const isUploaded = uploadedInputs[inputType];
-
-                  return (
-                    <div key={inputType} className="flex items-center gap-4 p-3 border rounded-lg bg-background">
-                      <div className={`p-2 rounded-full ${isUploaded ? "bg-green-100" : "bg-muted"}`}>
-                        {isUploaded ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : <IconComponent className="w-5 h-5 text-muted-foreground" />}
+              <div className="grid grid-cols-1 gap-4">
+                {medicineRecommendations.map(med => (
+                  <Card key={med.id}>
+                    <CardContent className="pt-6 flex justify-between items-center">
+                      <div>
+                        <h4 className="font-bold">{med.name}</h4>
+                        <p className="text-sm text-muted-foreground">{med.description}</p>
+                        <span className="text-primary font-bold">{med.price}</span>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{inputInfo.label}</p>
-                        <p className="text-xs text-muted-foreground">{inputInfo.description}</p>
-                      </div>
-                      <Button
-                        variant={isUploaded ? "secondary" : "outline"}
-                        size="sm"
-                        onClick={() => inputType === "doctor_consultation" ? handleFileUpload(inputType) : fileInputRefs.current[inputType]?.click()}
-                        disabled={isUploaded}
-                      >
-                        {isUploaded ? "Done" : "Upload"}
+                      <Button className="gap-2">
+                        <ShoppingCart className="w-4 h-4" />
+                        Buy Now
                       </Button>
-                      <input type="file" className="hidden" ref={el => fileInputRefs.current[inputType] = el} onChange={() => handleFileUpload(inputType)} />
-                    </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <p className="text-xs text-center text-muted-foreground italic">
+                *Disclaimer: These are over-the-counter herbal supplements. Consult a doctor if symptoms persist.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="p-8 rounded-xl border-2 border-dashed border-yellow-300 bg-yellow-50 text-center">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Lock className="w-8 h-8 text-yellow-600" />
+                </div>
+                <Badge variant="outline" className="mb-4 bg-white text-yellow-700 border-yellow-200">
+                  Doctor Verification Under Progress
+                </Badge>
+                <h3 className="text-lg font-bold mb-2">Purchase Restricted</h3>
+                <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                  Due to the severity of your symptoms, a physician must review your case before medication can be dispensed. 
+                  Our team is reviewing your uploaded verification data.
+                </p>
+              </div>
 
-          <div className="flex gap-4">
-            <Button variant="outline" className="flex-1" onClick={() => setActiveSection("dashboard")}>Return to Dashboard</Button>
-            <Button className="flex-1" onClick={() => navigate("/consult")}>Consult a Doctor</Button>
-          </div>
+              <div className="flex gap-4">
+                <Button variant="outline" className="flex-1" onClick={() => setActiveSection("dashboard")}>Return to Dashboard</Button>
+                <Button className="flex-1 gap-2">
+                  <MessageCircle className="w-4 h-4" />
+                  Chat with Practitioner
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -640,29 +615,6 @@ export default function HealthCheckResults() {
                 </ul>
               </CardContent>
             </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-12">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2"><Moon className="w-4 h-4 text-blue-500" /> Sleep Hygiene</CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
-                  <ul className="space-y-2">
-                    {preventiveGuidance.sleepTips.map((tip, i) => <li key={i}>• {tip}</li>)}
-                  </ul>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2"><Brain className="w-4 h-4 text-purple-500" /> Stress Management</CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
-                  <ul className="space-y-2">
-                    {preventiveGuidance.stressTips.map((tip, i) => <li key={i}>• {tip}</li>)}
-                  </ul>
-                </CardContent>
-              </Card>
-            </div>
           </>
         ) : (
           <div className="text-center py-12">
