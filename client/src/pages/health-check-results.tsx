@@ -42,7 +42,11 @@ import {
   Loader2,
   TrendingUp,
   Zap,
-  Target
+  Target,
+  ArrowLeft,
+  ArrowRight,
+  Flame,
+  Wind
 } from "lucide-react";
 import type { HealthCheckCase } from "@shared/schema";
 import { useMutation } from "@tanstack/react-query";
@@ -88,6 +92,10 @@ export default function HealthCheckResults() {
   const [uploadedInputs, setUploadedInputs] = useState<Record<string, boolean>>({});
   const [isSubmittingInputs, setIsSubmittingInputs] = useState(false);
   const [goalStatus, setGoalStatus] = useState<"yes" | "no" | null>(null);
+  const [activeSection, setActiveSection] = useState<"dashboard" | "diagnosis" | "prevention">("dashboard");
+  const [diagnosisStep, setDiagnosisStep] = useState<"symptom" | "intensity" | "analysis">("symptom");
+  const [selectedDiagnosisSymptom, setSelectedDiagnosisSymptom] = useState<number | null>(null);
+  const [intensityValue, setIntensityValue] = useState<number>(5);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
@@ -163,16 +171,14 @@ export default function HealthCheckResults() {
     );
   }
 
-  const { healthSnapshot, preventiveGuidance, diagnosisResult, nextStepsOptions, confirmationGate, medicalAwareness } = caseData;
-  const medical = diagnosisResult?.medicalAssessment;
+  const { healthSnapshot, preventiveGuidance, diagnosisResult, confirmationGate } = caseData;
 
   const allRequiredInputsProvided = confirmationGate?.requiredInputs.every(
     input => uploadedInputs[input]
   ) ?? false;
 
-  return (
-    <div className="container mx-auto px-6 py-8 max-w-4xl animate-fade-in">
-      {/* Header - Clean success state */}
+  const dashboardMain = (
+    <div className="animate-in fade-in duration-500">
       <div className="text-center mb-10">
         <div className="w-20 h-20 rounded-2xl bg-accent flex items-center justify-center mx-auto mb-6">
           <CheckCircle2 className="w-10 h-10 text-primary" />
@@ -185,7 +191,6 @@ export default function HealthCheckResults() {
         </p>
       </div>
 
-      {/* Health Analytics Dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Card className="md:col-span-2">
           <CardHeader className="pb-2">
@@ -230,7 +235,6 @@ export default function HealthCheckResults() {
         </Card>
       </div>
 
-      {/* Daily Target Check-in */}
       <Card className="mb-8 border-primary/20 bg-primary/5">
         <CardContent className="py-6">
           {!goalStatus ? (
@@ -335,292 +339,345 @@ export default function HealthCheckResults() {
         </CardContent>
       </Card>
 
-      <div className="max-w-2xl mx-auto">
-        {/* Section 7.1: Health Snapshot */}
-        {healthSnapshot && (
-          <Card className="mb-6" data-testid="card-health-snapshot">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Heart className="w-5 h-5 text-primary" />
-                <CardTitle>Ayurvedic Analysis</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">{healthSnapshot.summary}</p>
+      <div className="space-y-4 mb-8">
+        <h2 className="text-lg font-serif font-bold">Recommended Paths</h2>
 
-              {/* Dosha Imbalance */}
-              <div className="bg-muted/50 rounded-lg p-4">
-                <p className="text-sm font-medium mb-2">Dosha Imbalance Detected</p>
-                <div className="flex items-center gap-3">
-                  <Badge className={`${doshaColors[healthSnapshot.doshaImbalance.primary]} text-white capitalize`}>
-                    {healthSnapshot.doshaImbalance.primary}
-                  </Badge>
-                  <span className="text-sm capitalize">{healthSnapshot.doshaImbalance.level} level</span>
-                </div>
-              </div>
-
-              {/* Dosha Visualization */}
-              <div className="space-y-3">
-                <p className="text-sm font-medium">Current Balance</p>
-                {(["vata", "pitta", "kapha"] as const).map((dosha) => (
-                  <div key={dosha} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="capitalize">{dosha}</span>
-                      <span>{healthSnapshot.doshaVisualization[dosha]}%</span>
-                    </div>
-                    <Progress
-                      value={healthSnapshot.doshaVisualization[dosha]}
-                      className="h-2"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              {/* Risk Level */}
-              {medical && (
-                <div className="flex items-center gap-2 pt-2">
-                  <span className="text-sm font-medium">Risk Level:</span>
-                  <Badge className={riskBadgeColors[medical.riskLevel]}>
-                    {medical.riskLevel.toUpperCase()}
-                  </Badge>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Section 4: Confirmation Gate - Advanced Inputs UI */}
-        {confirmationGate?.triggered && !confirmationGate.inputsProvided && (
-          <Card className="mb-6 border-yellow-500/50" data-testid="card-confirmation-gate">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-yellow-500" />
-                <CardTitle className="text-lg">Additional Verification Needed</CardTitle>
-              </div>
-              <CardDescription>
-                For more accurate guidance and to unlock medicine recommendations, please provide the following:
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {confirmationGate.requiredInputs.map((inputType) => {
-                const inputInfo = inputTypeLabels[inputType] || { 
-                  label: inputType.replace("_", " "), 
-                  description: "Required for accurate diagnosis",
-                  icon: Camera 
-                };
-                const IconComponent = inputInfo.icon;
-                const isUploaded = uploadedInputs[inputType];
-
-                return (
-                  <div key={inputType} className="flex items-center gap-4 p-3 border rounded-lg">
-                    <div className={`p-2 rounded-full ${isUploaded ? "bg-green-100 dark:bg-green-900/30" : "bg-muted"}`}>
-                      {isUploaded ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-500" />
-                      ) : (
-                        <IconComponent className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{inputInfo.label}</p>
-                      <p className="text-xs text-muted-foreground">{inputInfo.description}</p>
-                    </div>
-                    {inputType === "doctor_consultation" ? (
-                      <Button
-                        variant={isUploaded ? "secondary" : "outline"}
-                        size="sm"
-                        onClick={() => handleFileUpload(inputType)}
-                        disabled={isUploaded}
-                        data-testid={`button-schedule-${inputType}`}
-                      >
-                        {isUploaded ? "Scheduled" : "Schedule"}
-                      </Button>
-                    ) : (
-                      <>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          ref={el => fileInputRefs.current[inputType] = el}
-                          onChange={() => handleFileUpload(inputType)}
-                          data-testid={`input-file-${inputType}`}
-                        />
-                        <Button
-                          variant={isUploaded ? "secondary" : "outline"}
-                          size="sm"
-                          onClick={() => fileInputRefs.current[inputType]?.click()}
-                          disabled={isUploaded}
-                          data-testid={`button-upload-${inputType}`}
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          {isUploaded ? "Uploaded" : "Upload"}
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-
-              {allRequiredInputsProvided && (
-                <Button
-                  className="w-full"
-                  onClick={handleSubmitAdvancedInputs}
-                  disabled={isSubmittingInputs}
-                  data-testid="button-submit-advanced-inputs"
-                >
-                  {isSubmittingInputs ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Submit for Enhanced Analysis
-                    </>
-                  )}
-                </Button>
-              )}
-
-              <p className="text-xs text-muted-foreground text-center">
-                Medicine recommendations will be enabled after verification is complete.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Section 7.2: Preventive Guidance (NOT prescriptions) */}
-        {preventiveGuidance && (
-          <div className="space-y-4 mb-6">
-            <h2 className="text-lg font-serif font-bold flex items-center gap-2">
-              <Leaf className="w-5 h-5 text-primary" />
-              Base Preventive Guidance
-            </h2>
-
-            {/* Habits */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Activity className="w-4 h-4" />
-                  Lifestyle Habits
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {preventiveGuidance.habits.map((habit, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                      <span>{habit}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Food Preferences */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Utensils className="w-4 h-4" />
-                  Food Preferences
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Dietary suggestions based on your constitution
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {preventiveGuidance.foodPreferences.map((food, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                      <span>{food}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+        <Button
+          className="w-full h-auto py-6 justify-start gap-4 hover-elevate transition-all"
+          variant="outline"
+          onClick={() => setActiveSection("diagnosis")}
+          data-testid="button-current-discomfort"
+        >
+          <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-6 h-6 text-red-500" />
           </div>
-        )}
+          <div className="text-left">
+            <span className="font-bold block text-lg">Current Discomfort</span>
+            <span className="text-sm text-muted-foreground">
+              Experiencing pain or unusual symptoms? Start a guided diagnostic check.
+            </span>
+          </div>
+          <ChevronRight className="w-5 h-5 ml-auto shrink-0 text-muted-foreground" />
+        </Button>
 
-      {/* Section 8: Next Steps Options */}
-      {nextStepsOptions && (
-        <div className="space-y-4 mb-8">
-          <h2 className="text-lg font-serif font-bold">Recommended Paths</h2>
+        <Button
+          className="w-full h-auto py-6 justify-start gap-4 hover-elevate transition-all"
+          variant="outline"
+          onClick={() => setActiveSection("prevention")}
+          data-testid="button-lifestyle-prevention"
+        >
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Leaf className="w-6 h-6 text-primary" />
+          </div>
+          <div className="text-left">
+            <span className="font-bold block text-lg">Lifestyle & Prevention</span>
+            <span className="text-sm text-muted-foreground">
+              Access your personalized Ayurvedic diet, routine, and habits.
+            </span>
+          </div>
+          <ChevronRight className="w-5 h-5 ml-auto shrink-0 text-muted-foreground" />
+        </Button>
+      </div>
 
-          <Button
-            className="w-full h-auto py-4 justify-start gap-4"
-            variant="default"
-            onClick={() => navigate("/health-check")}
-            data-testid="button-lifestyle-only"
-          >
-            <Leaf className="w-6 h-6 shrink-0" />
-            <div className="text-left">
-              <span className="font-medium block">Current Discomfort</span>
-              <span className="text-xs opacity-80">
-                Address current symptoms through a new diagnosis flow
-              </span>
-            </div>
-            <ChevronRight className="w-5 h-5 ml-auto shrink-0" />
+      <div className="text-center pb-12">
+        <Link href="/">
+          <Button variant="ghost" data-testid="button-back-home">
+            <Home className="w-4 h-4 mr-2" />
+            Back to Portal Selection
           </Button>
+        </Link>
+      </div>
+    </div>
+  );
 
-          <Button
-            className="w-full h-auto py-4 justify-start gap-4"
-            variant="outline"
-            onClick={() => navigate("/")}
-            data-testid="button-back-dashboard"
+  const diagnosisContent = (
+    <div className="animate-in fade-in slide-in-from-right-4 duration-500 max-w-2xl mx-auto">
+      <Button 
+        variant="ghost" 
+        className="mb-6"
+        onClick={() => {
+          setActiveSection("dashboard");
+          setDiagnosisStep("symptom");
+        }}
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Dashboard
+      </Button>
+
+      <div className="mb-8">
+        <div className="flex justify-between text-sm mb-2">
+          <span className="font-medium">Diagnostic Check</span>
+          <span>Step {diagnosisStep === "symptom" ? 1 : diagnosisStep === "intensity" ? 2 : 3} of 3</span>
+        </div>
+        <Progress value={diagnosisStep === "symptom" ? 33 : diagnosisStep === "intensity" ? 66 : 100} className="h-2" />
+      </div>
+
+      {diagnosisStep === "symptom" && (
+        <div className="space-y-6">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-serif font-bold mb-2">What's bothering you?</h2>
+            <p className="text-muted-foreground">Select the primary symptom you are experiencing.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { id: 1, name: "Fatigue / Low energy", icon: Zap },
+              { id: 10, name: "Heartburn / Reflux", icon: Flame },
+              { id: 5, name: "Digestion Issues", icon: Utensils },
+              { id: 6, name: "Joint Pain / Stiffness", icon: Activity },
+              { id: 2, name: "Headache / Anxiety", icon: Brain },
+              { id: 18, name: "Congestion", icon: Wind }
+            ].map((sym) => (
+              <Button
+                key={sym.id}
+                variant={selectedDiagnosisSymptom === sym.id ? "default" : "outline"}
+                className="h-auto py-4 justify-start gap-3"
+                onClick={() => setSelectedDiagnosisSymptom(sym.id)}
+              >
+                <sym.icon className={`w-5 h-5 ${selectedDiagnosisSymptom === sym.id ? "text-white" : "text-primary"}`} />
+                {sym.name}
+              </Button>
+            ))}
+          </div>
+          <Button 
+            className="w-full mt-8" 
+            disabled={!selectedDiagnosisSymptom}
+            onClick={() => setDiagnosisStep("intensity")}
           >
-            <Home className="w-6 h-6 shrink-0 text-primary" />
-            <div className="text-left">
-              <span className="font-medium block">Lifestyle & Prevention</span>
-              <span className="text-xs opacity-70">
-                Continue with personalized wellness guidance
-              </span>
-            </div>
-            <ChevronRight className="w-5 h-5 ml-auto shrink-0" />
+            Continue
+            <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
       )}
 
-        {/* Section 11: Feedback Loop */}
-        {!feedbackSubmitted && (
-          <Card className="mb-8">
-            <CardContent className="py-4 text-center">
-              <p className="text-sm font-medium mb-3">Was this report helpful?</p>
-              <div className="flex justify-center gap-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => feedbackMutation.mutate(true)}
-                  disabled={feedbackMutation.isPending}
-                  data-testid="button-feedback-yes"
-                >
-                  <ThumbsUp className="w-4 h-4 mr-2" />
-                  Yes
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => feedbackMutation.mutate(false)}
-                  disabled={feedbackMutation.isPending}
-                  data-testid="button-feedback-no"
-                >
-                  <ThumbsDown className="w-4 h-4 mr-2" />
-                  No
-                </Button>
+      {diagnosisStep === "intensity" && (
+        <div className="space-y-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-serif font-bold mb-2">Almost there</h2>
+            <p className="text-muted-foreground">Help us understand the severity of your discomfort.</p>
+          </div>
+          
+          <Card>
+            <CardContent className="pt-6 space-y-6">
+              <div className="space-y-4">
+                <label className="text-sm font-medium">How long has this lasted?</label>
+                <div className="flex gap-2">
+                  {["Today", "2-3 Days", "1 Week", "Chronic"].map(d => (
+                    <Button key={d} variant="outline" size="sm" className="flex-1 text-xs">{d}</Button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">Rate the intensity (1-10)</label>
+                  <span className="text-2xl font-bold text-primary">{intensityValue}</span>
+                </div>
+                <Input 
+                  type="range" 
+                  min="1" 
+                  max="10" 
+                  value={intensityValue} 
+                  onChange={(e) => setIntensityValue(parseInt(e.target.value))}
+                  className="h-2"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground px-1">
+                  <span>Mild</span>
+                  <span>Moderate</span>
+                  <span>Severe</span>
+                </div>
               </div>
             </CardContent>
           </Card>
-        )}
 
-        {/* Back to Home */}
-        <div className="text-center pb-12">
-          <Link href="/">
-            <Button variant="ghost" data-testid="button-back-home">
-              <Home className="w-4 h-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
+          <Button className="w-full" onClick={() => setDiagnosisStep("analysis")}>
+            Complete Analysis
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
         </div>
+      )}
+
+      {diagnosisStep === "analysis" && (
+        <div className="space-y-6 animate-in fade-in duration-700">
+          <div className="text-center mb-8">
+            <Badge className="mb-4 bg-green-100 text-green-700 hover:bg-green-100 border-none px-4 py-1">Analysis Complete</Badge>
+            <h2 className="text-2xl font-serif font-bold">Your Diagnostic Results</h2>
+          </div>
+
+          {healthSnapshot && (
+            <Card className="mb-6 border-primary/20 shadow-sm">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-primary" />
+                  <CardTitle>Ayurvedic Analysis</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground leading-relaxed">{healthSnapshot.summary}</p>
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <p className="text-sm font-medium mb-2">Dosha Imbalance Detected</p>
+                  <div className="flex items-center gap-3">
+                    <Badge className={`${doshaColors[healthSnapshot.doshaImbalance.primary]} text-white capitalize`}>
+                      {healthSnapshot.doshaImbalance.primary}
+                    </Badge>
+                    <span className="text-sm capitalize">{healthSnapshot.doshaImbalance.level} level</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {confirmationGate?.triggered && !confirmationGate.inputsProvided && (
+            <Card className="mb-6 border-yellow-500/30 bg-yellow-50/30">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                  <CardTitle className="text-lg">Additional Verification Needed</CardTitle>
+                </div>
+                <CardDescription>
+                  For more accurate guidance and to unlock medicine recommendations, please provide the following:
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {confirmationGate.requiredInputs.map((inputType) => {
+                  const inputInfo = inputTypeLabels[inputType] || { 
+                    label: inputType.replace("_", " "), 
+                    description: "Required for accurate diagnosis",
+                    icon: Camera 
+                  };
+                  const IconComponent = inputInfo.icon;
+                  const isUploaded = uploadedInputs[inputType];
+
+                  return (
+                    <div key={inputType} className="flex items-center gap-4 p-3 border rounded-lg bg-background">
+                      <div className={`p-2 rounded-full ${isUploaded ? "bg-green-100" : "bg-muted"}`}>
+                        {isUploaded ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : <IconComponent className="w-5 h-5 text-muted-foreground" />}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{inputInfo.label}</p>
+                        <p className="text-xs text-muted-foreground">{inputInfo.description}</p>
+                      </div>
+                      <Button
+                        variant={isUploaded ? "secondary" : "outline"}
+                        size="sm"
+                        onClick={() => inputType === "doctor_consultation" ? handleFileUpload(inputType) : fileInputRefs.current[inputType]?.click()}
+                        disabled={isUploaded}
+                      >
+                        {isUploaded ? "Done" : "Upload"}
+                      </Button>
+                      <input type="file" className="hidden" ref={el => fileInputRefs.current[inputType] = el} onChange={() => handleFileUpload(inputType)} />
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="flex gap-4">
+            <Button variant="outline" className="flex-1" onClick={() => setActiveSection("dashboard")}>Return to Dashboard</Button>
+            <Button className="flex-1" onClick={() => navigate("/consult")}>Consult a Doctor</Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const preventionContent = (
+    <div className="animate-in fade-in slide-in-from-left-4 duration-500 max-w-2xl mx-auto">
+      <Button variant="ghost" className="mb-6" onClick={() => setActiveSection("dashboard")}>
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Dashboard
+      </Button>
+
+      <div className="text-center mb-10">
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+          <Leaf className="w-8 h-8 text-primary" />
+        </div>
+        <h2 className="text-2xl font-serif font-bold mb-2">Lifestyle & Prevention</h2>
+        <p className="text-muted-foreground">Personalized Ayurvedic guidance for long-term wellness</p>
       </div>
+
+      <div className="space-y-6">
+        {preventiveGuidance ? (
+          <>
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-primary/5 pb-4">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Utensils className="w-5 h-5 text-primary" />
+                  Dietary Preferences
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <ul className="space-y-4">
+                  {preventiveGuidance.foodPreferences.map((food, i) => (
+                    <li key={i} className="flex gap-3">
+                      <div className="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      </div>
+                      <span className="text-sm leading-relaxed">{food}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-primary/5 pb-4">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-primary" />
+                  Daily Routine & Habits
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <ul className="space-y-4">
+                  {preventiveGuidance.habits.map((habit, i) => (
+                    <li key={i} className="flex gap-3">
+                      <div className="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      </div>
+                      <span className="text-sm leading-relaxed">{habit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-12">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2"><Moon className="w-4 h-4 text-blue-500" /> Sleep Hygiene</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground">
+                  <ul className="space-y-2">
+                    {preventiveGuidance.sleepTips.map((tip, i) => <li key={i}>• {tip}</li>)}
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2"><Brain className="w-4 h-4 text-purple-500" /> Stress Management</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground">
+                  <ul className="space-y-2">
+                    {preventiveGuidance.stressTips.map((tip, i) => <li key={i}>• {tip}</li>)}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground italic">No guidance found. Please complete a profile check.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="container mx-auto px-6 py-8 max-w-4xl min-h-screen">
+      {activeSection === "dashboard" && dashboardMain}
+      {activeSection === "diagnosis" && diagnosisContent}
+      {activeSection === "prevention" && preventionContent}
     </div>
   );
 }
