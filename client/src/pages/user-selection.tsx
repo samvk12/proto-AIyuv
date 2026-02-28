@@ -26,7 +26,7 @@ export default function UserSelection() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl w-full">
         {/* Patients Card */}
-        <Link href="/health-check/results">
+        <Link href="/patient">
           <Card 
             className="group cursor-pointer border-2 border-transparent hover:border-primary/20 hover:shadow-xl transition-all duration-300 bg-white"
             data-testid="card-role-patient"

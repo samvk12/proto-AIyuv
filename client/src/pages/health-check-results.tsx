@@ -132,7 +132,7 @@ export default function HealthCheckResults() {
   const severityLevel = useMemo(() => {
     if (severityScore <= 3) return "Mild";
     if (severityScore <= 6) return "Moderate";
-    return "Severe";
+    return "High";
   }, [severityScore]);
 
   const severityColor = useMemo(() => {
@@ -140,6 +140,14 @@ export default function HealthCheckResults() {
     if (severityLevel === "Moderate") return "text-yellow-600 bg-yellow-50 border-yellow-200";
     return "text-red-600 bg-red-50 border-red-200";
   }, [severityLevel]);
+
+  const doctorVerified = useMemo(
+    () =>
+      caseData?.status === "doctor_approved" ||
+      caseData?.nextStepsOptions?.medicinesEnabled === true ||
+      caseData?.confirmationGate?.canEnableMedicines === true,
+    [caseData],
+  );
 
   const handleFileUpload = (inputType: string) => {
     setUploadedInputs(prev => ({ ...prev, [inputType]: true }));
@@ -212,6 +220,25 @@ export default function HealthCheckResults() {
           </CardContent>
         </Card>
       </div>
+
+      {healthSnapshot && (
+        <Card className="mb-8">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Heart className="w-4 h-4 text-primary" />
+              Ayurvedic Dosha Dashboard
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Visualization of your Vata, Pitta, and Kapha balance from the latest analysis.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <DoshaBar label="Vata" value={healthSnapshot.doshaVisualization.vata} tone="vata" />
+            <DoshaBar label="Pitta" value={healthSnapshot.doshaVisualization.pitta} tone="pitta" />
+            <DoshaBar label="Kapha" value={healthSnapshot.doshaVisualization.kapha} tone="kapha" />
+          </CardContent>
+        </Card>
+      )}
 
       <div className="space-y-4 mb-8">
         <h2 className="text-lg font-serif font-bold">Recommended Paths</h2>
@@ -372,7 +399,7 @@ export default function HealthCheckResults() {
                 <div className="flex justify-between text-xs text-muted-foreground px-1">
                   <span>Mild</span>
                   <span>Moderate</span>
-                  <span>Severe</span>
+                  <span>High</span>
                 </div>
               </div>
             </CardContent>
@@ -441,8 +468,8 @@ export default function HealthCheckResults() {
                 <span className="font-bold">Detected Severity: {severityLevel}</span>
               </div>
               <p className="text-sm opacity-90">
-                {severityLevel === "Mild" 
-                  ? "Your symptoms appear manageable with basic Ayurvedic support." 
+                {severityLevel === "Mild"
+                  ? "Your symptoms appear manageable with basic Ayurvedic support."
                   : "Due to the intensity of your symptoms, we require verification data before recommending medication."}
               </p>
             </CardContent>
@@ -477,8 +504,8 @@ export default function HealthCheckResults() {
             </div>
           )}
 
-          <Button 
-            className="w-full mt-6" 
+          <Button
+            className="w-full mt-6"
             onClick={() => setDiagnosisStep("analysis")}
           >
             Finish Analysis
@@ -505,23 +532,7 @@ export default function HealthCheckResults() {
                 </AlertDescription>
               </Alert>
 
-              <div className="grid grid-cols-1 gap-4">
-                {medicineRecommendations.map(med => (
-                  <Card key={med.id}>
-                    <CardContent className="pt-6 flex justify-between items-center">
-                      <div>
-                        <h4 className="font-bold">{med.name}</h4>
-                        <p className="text-sm text-muted-foreground">{med.description}</p>
-                        <span className="text-primary font-bold">{med.price}</span>
-                      </div>
-                      <Button className="gap-2">
-                        <ShoppingCart className="w-4 h-4" />
-                        Buy Now
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <MedicineList />
               <p className="text-xs text-center text-muted-foreground italic">
                 *Disclaimer: These are over-the-counter herbal supplements. Consult a doctor if symptoms persist.
               </p>
@@ -533,17 +544,72 @@ export default function HealthCheckResults() {
                   <Lock className="w-8 h-8 text-yellow-600" />
                 </div>
                 <Badge variant="outline" className="mb-4 bg-white text-yellow-700 border-yellow-200">
-                  Doctor Verification Under Progress
+                  {doctorVerified ? "Doctor Verified" : "Sent to Doctor for Verification"}
                 </Badge>
-                <h3 className="text-lg font-bold mb-2">Purchase Restricted</h3>
+                <h3 className="text-lg font-bold mb-2">
+                  {doctorVerified ? "Medicines Unlocked" : "Purchase Restricted"}
+                </h3>
                 <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                  Due to the severity of your symptoms, a physician must review your case before medication can be dispensed. 
-                  Our team is reviewing your uploaded verification data.
+                  {doctorVerified
+                    ? "A physician has reviewed your case. You can now access the recommended Ayurvedic medicines below."
+                    : "Due to the intensity of your symptoms, a physician must review your case before medication can be dispensed. Your verification data has been queued for review."}
                 </p>
               </div>
 
+              {!doctorVerified && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Stethoscope className="w-4 h-4 text-primary" />
+                      Consultation Hub
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Choose how you&apos;d like to speak with a doctor for this case.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid sm:grid-cols-3 gap-3">
+                    <Button variant="outline" className="flex flex-col items-start gap-1 h-auto py-3">
+                      <MessageCircle className="w-4 h-4 text-primary" />
+                      <span className="text-xs font-medium">Online Chat</span>
+                      <span className="text-[11px] text-muted-foreground">
+                        Get quick clarifications in a secure chat.
+                      </span>
+                    </Button>
+                    <Button variant="outline" className="flex flex-col items-start gap-1 h-auto py-3">
+                      <Camera className="w-4 h-4 text-primary" />
+                      <span className="text-xs font-medium">Tele-consultation</span>
+                      <span className="text-[11px] text-muted-foreground">
+                        Audio/video call with an Ayurvedic doctor.
+                      </span>
+                    </Button>
+                    <Button variant="outline" className="flex flex-col items-start gap-1 h-auto py-3">
+                      <Home className="w-4 h-4 text-primary" />
+                      <span className="text-xs font-medium">In-person Visit</span>
+                      <span className="text-[11px] text-muted-foreground">
+                        Find a nearby partner clinic (coming soon).
+                      </span>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {doctorVerified && (
+                <div className="space-y-4">
+                  <MedicineList />
+                  <p className="text-xs text-center text-muted-foreground italic">
+                    *Medicines shown here are enabled only after doctor verification.
+                  </p>
+                </div>
+              )}
+
               <div className="flex gap-4">
-                <Button variant="outline" className="flex-1" onClick={() => setActiveSection("dashboard")}>Return to Dashboard</Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setActiveSection("dashboard")}
+                >
+                  Return to Dashboard
+                </Button>
                 <Button className="flex-1 gap-2">
                   <MessageCircle className="w-4 h-4" />
                   Chat with Practitioner
@@ -577,18 +643,39 @@ export default function HealthCheckResults() {
             <Card className="overflow-hidden">
               <CardHeader className="bg-primary/5 pb-4">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Utensils className="w-5 h-5 text-primary" />
-                  Dietary Preferences
+                  <Brain className="w-5 h-5 text-primary" />
+                  Stress Management
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
                 <ul className="space-y-4">
-                  {preventiveGuidance.foodPreferences.map((food, i) => (
+                  {preventiveGuidance.stressTips.map((tip, i) => (
                     <li key={i} className="flex gap-3">
                       <div className="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center shrink-0">
                         <CheckCircle2 className="w-4 h-4 text-green-600" />
                       </div>
-                      <span className="text-sm leading-relaxed">{food}</span>
+                      <span className="text-sm leading-relaxed">{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-primary/5 pb-4">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Moon className="w-5 h-5 text-primary" />
+                  Sleep Cycle
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <ul className="space-y-4">
+                  {preventiveGuidance.sleepTips.map((tip, i) => (
+                    <li key={i} className="flex gap-3">
+                      <div className="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      </div>
+                      <span className="text-sm leading-relaxed">{tip}</span>
                     </li>
                   ))}
                 </ul>
@@ -599,17 +686,38 @@ export default function HealthCheckResults() {
               <CardHeader className="bg-primary/5 pb-4">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Activity className="w-5 h-5 text-primary" />
-                  Daily Routine & Habits
+                  Exercise & Movement
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
                 <ul className="space-y-4">
-                  {preventiveGuidance.habits.map((habit, i) => (
+                  {preventiveGuidance.activityTips.map((tip, i) => (
                     <li key={i} className="flex gap-3">
                       <div className="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center shrink-0">
                         <CheckCircle2 className="w-4 h-4 text-green-600" />
                       </div>
-                      <span className="text-sm leading-relaxed">{habit}</span>
+                      <span className="text-sm leading-relaxed">{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-primary/5 pb-4">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Utensils className="w-5 h-5 text-primary" />
+                  Diet & Food Choices
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <ul className="space-y-4">
+                  {preventiveGuidance.foodPreferences.map((food, i) => (
+                    <li key={i} className="flex gap-3">
+                      <div className="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      </div>
+                      <span className="text-sm leading-relaxed">{food}</span>
                     </li>
                   ))}
                 </ul>
@@ -633,3 +741,51 @@ export default function HealthCheckResults() {
     </div>
   );
 }
+
+function DoshaBar({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "vata" | "pitta" | "kapha";
+}) {
+  const baseClass =
+    tone === "vata" ? "dosha-bar-vata" : tone === "pitta" ? "dosha-bar-pitta" : "dosha-bar-kapha";
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className="font-medium">{label}</span>
+        <span className="text-muted-foreground">{value}%</span>
+      </div>
+      <div className="w-full h-2 rounded-full bg-accent/60 overflow-hidden">
+        <div className={`dosha-bar ${baseClass}`} style={{ width: `${value}%` }} aria-hidden="true" />
+      </div>
+    </div>
+  );
+}
+
+function MedicineList() {
+  return (
+    <div className="grid grid-cols-1 gap-4">
+      {medicineRecommendations.map((med) => (
+        <Card key={med.id}>
+          <CardContent className="pt-6 flex justify-between items-center">
+            <div>
+              <h4 className="font-bold">{med.name}</h4>
+              <p className="text-sm text-muted-foreground">{med.description}</p>
+              <span className="text-primary font-bold">{med.price}</span>
+            </div>
+            <Button className="gap-2">
+              <ShoppingCart className="w-4 h-4" />
+              Buy Now
+            </Button>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
