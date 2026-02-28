@@ -12,10 +12,12 @@ import {
   Camera,
   Image as ImageIcon,
   CheckCircle2,
+  Stethoscope,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { upsertUserSession } from "@/lib/userSessions";
 import { symptomDefinitions } from "@/lib/symptom-flow";
+import FlowStepper from "@/components/flow-stepper";
 
 const mildMedicines = [
   {
@@ -129,7 +131,16 @@ export default function SymptomResults() {
         Back to Assessment
       </Button>
 
+      <FlowStepper
+        steps={["Intake", "Symptoms", "Assessment", "Results"]}
+        currentStep={3}
+        className="mb-6"
+      />
+
       <div className="mb-8 text-center">
+        <Badge variant="secondary" className="mb-3 text-[11px]">
+          Step 4 of 4 • Results
+        </Badge>
         <h1 className="text-2xl md:text-3xl font-serif font-bold mb-2">
           Your Ayurvedic Analysis
         </h1>
@@ -137,6 +148,17 @@ export default function SymptomResults() {
           These results reflect your current imbalance pattern based on the symptoms and
           severity you shared.
         </p>
+        <div className="mt-5 flex justify-center">
+          <Button
+            size="lg"
+            className="gap-2"
+            onClick={() => navigate("/consult")}
+            data-testid="button-consult-doctor"
+          >
+            <Stethoscope className="w-4 h-4" />
+            Consult a Doctor
+          </Button>
+        </div>
       </div>
 
       {/* Dosha Balance */}

@@ -36,7 +36,7 @@ export default function PatientEnter() {
     }
 
     setSaving(false);
-    navigate("/health-dashboard");
+    navigate("/health-dashboard?focus=prevention");
   };
 
   return (
@@ -49,14 +49,14 @@ export default function PatientEnter() {
       <Card className="overflow-hidden">
         <CardHeader className="space-y-2 bg-primary/5">
           <Badge variant="secondary" className="w-fit text-[11px]">
-            Patient Portal
+            Portal Login
           </Badge>
           <CardTitle className="text-xl flex items-center gap-2">
             <User className="w-5 h-5 text-primary" />
-            Enter your username
+            Portal Login
           </CardTitle>
           <CardDescription>
-            No login required. This username is used to store your inputs and results.
+            Enter a username to continue. This is used to save your wellness inputs and results.
           </CardDescription>
         </CardHeader>
 

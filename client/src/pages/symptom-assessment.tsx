@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,11 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { symptomDefinitions, calculateDoshaBalance, calculateOverallSeverity } from "@/lib/symptom-flow";
 import { useSymptomFlow } from "@/context/SymptomFlowContext";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import FlowStepper from "@/components/flow-stepper";
 
 export default function SymptomAssessment() {
   const [, navigate] = useLocation();
   const { selection, answers, setAnswers, setAnalysis, username } = useSymptomFlow();
+  const [isAnalyzing, setIsAnalyzing] = useState(true);
 
   if (!username) {
     navigate("/patient");
@@ -26,6 +28,12 @@ export default function SymptomAssessment() {
     navigate("/symptoms");
     return null;
   }
+
+  useEffect(() => {
+    setIsAnalyzing(true);
+    const timer = window.setTimeout(() => setIsAnalyzing(false), 1400);
+    return () => window.clearTimeout(timer);
+  }, [selection.selectedSymptomIds.join(",")]);
 
   const totalQuestions = selectedSymptoms.reduce(
     (sum, s) => sum + s.questions.length,
@@ -90,9 +98,18 @@ export default function SymptomAssessment() {
         Back to Symptoms
       </Button>
 
+      <FlowStepper
+        steps={["Intake", "Symptoms", "Assessment", "Results"]}
+        currentStep={2}
+        className="mb-6"
+      />
+
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
           <div>
+            <Badge variant="secondary" className="mb-2 text-[11px]">
+              Step 3 of 4 • Assessment
+            </Badge>
             <h1 className="text-xl md:text-2xl font-serif font-bold">
               Symptom Severity Assessment
             </h1>
@@ -107,54 +124,75 @@ export default function SymptomAssessment() {
         <Progress value={progress} className="h-2" />
       </div>
 
-      <div className="space-y-5">
-        {selectedSymptoms.map((symptom) => {
-          const symptomAnswers = answers[symptom.id] || {};
+      {isAnalyzing ? (
+        <Card className="border-emerald-200 bg-emerald-50/60">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-emerald-700" />
+              Analyzing Symptoms
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Generating a personalized set of questions based on your selections.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {selectedSymptoms.map((symptom) => (
+              <Badge key={symptom.id} variant="outline">
+                {symptom.label}
+              </Badge>
+            ))}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-5">
+          {selectedSymptoms.map((symptom) => {
+            const symptomAnswers = answers[symptom.id] || {};
 
-          return (
-            <Card key={symptom.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <CardTitle className="text-base">{symptom.label}</CardTitle>
-                    <CardDescription className="text-xs">
-                      {symptom.description}
-                    </CardDescription>
-                  </div>
-                  <Badge variant="outline" className="text-[11px]">
-                    {Object.keys(symptomAnswers).length}/{symptom.questions.length} complete
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {symptom.questions.map((q) => (
-                  <div key={q.id} className="space-y-2">
-                    <p className="text-sm font-medium">{q.text}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {q.options.map((opt) => {
-                        const selected = symptomAnswers[q.id] === opt.score;
-                        const levelLabel =
-                          opt.score === 1 ? "Mild" : opt.score === 2 ? "Moderate" : "High";
-                        return (
-                          <Button
-                            key={opt.label}
-                            size="sm"
-                            variant={selected ? "default" : "outline"}
-                            onClick={() => handleAnswer(symptom.id, q.id, opt.score)}
-                          >
-                            <span className="mr-1 text-xs opacity-70">{levelLabel}</span>
-                            {opt.label}
-                          </Button>
-                        );
-                      })}
+            return (
+              <Card key={symptom.id}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-base">{symptom.label}</CardTitle>
+                      <CardDescription className="text-xs">
+                        {symptom.description}
+                      </CardDescription>
                     </div>
+                    <Badge variant="outline" className="text-[11px]">
+                      {Object.keys(symptomAnswers).length}/{symptom.questions.length} complete
+                    </Badge>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {symptom.questions.map((q) => (
+                    <div key={q.id} className="space-y-2">
+                      <p className="text-sm font-medium">{q.text}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {q.options.map((opt) => {
+                          const selected = symptomAnswers[q.id] === opt.score;
+                          const levelLabel =
+                            opt.score === 1 ? "Mild" : opt.score === 2 ? "Moderate" : "High";
+                          return (
+                            <Button
+                              key={opt.label}
+                              size="sm"
+                              variant={selected ? "default" : "outline"}
+                              onClick={() => handleAnswer(symptom.id, q.id, opt.score)}
+                            >
+                              <span className="mr-1 text-xs opacity-70">{levelLabel}</span>
+                              {opt.label}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       <div className="flex justify-end mt-6">
         <Button

@@ -1,15 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { symptomDefinitions } from "@/lib/symptom-flow";
 import { useSymptomFlow } from "@/context/SymptomFlowContext";
-import { AlertTriangle, Brain, Wind, Flame, ArrowRight, ArrowLeft } from "lucide-react";
+import { AlertTriangle, Brain, Wind, Flame, ArrowRight, ArrowLeft, Search } from "lucide-react";
+import FlowStepper from "@/components/flow-stepper";
 
 export default function SymptomSelection() {
   const [, navigate] = useLocation();
   const { selection, setSelection, setAnswers, setAnalysis, setDoctorVerified, username } = useSymptomFlow();
+  const [searchTerm, setSearchTerm] = useState("");
 
   if (!username) {
     navigate("/patient");
@@ -43,6 +46,15 @@ export default function SymptomSelection() {
     return <Brain className="w-3 h-3" />;
   };
 
+  const filteredSymptoms = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return symptomDefinitions;
+    return symptomDefinitions.filter((symptom) => {
+      const content = `${symptom.label} ${symptom.description} ${symptom.dosha}`.toLowerCase();
+      return content.includes(term);
+    });
+  }, [searchTerm]);
+
   const canAnalyze = selection.selectedSymptomIds.length > 0;
 
   return (
@@ -57,13 +69,37 @@ export default function SymptomSelection() {
         Back to Dashboard
       </Button>
 
+      <FlowStepper
+        steps={["Intake", "Symptoms", "Assessment", "Results"]}
+        currentStep={1}
+        className="mb-6"
+      />
+
       <div className="text-center mb-8">
+        <Badge variant="secondary" className="mb-3 text-[11px]">
+          Step 2 of 4 • Symptoms
+        </Badge>
         <h1 className="text-2xl md:text-3xl font-serif font-bold mb-3">
           What are you feeling today?
         </h1>
         <p className="text-muted-foreground max-w-xl mx-auto">
           Select the symptoms that match your current experience. We&apos;ll use this to
           understand which doshas are imbalanced.
+        </p>
+      </div>
+
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+          <Input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search symptoms by name or description"
+            className="pl-9"
+          />
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Start typing to filter the symptom list.
         </p>
       </div>
 
@@ -79,7 +115,7 @@ export default function SymptomSelection() {
       </Card>
 
       <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-        {symptomDefinitions.map((symptom) => {
+        {filteredSymptoms.map((symptom) => {
           const selected = selection.selectedSymptomIds.includes(symptom.id);
           const doshaLabel = getDoshaLabel(symptom.dosha);
 
@@ -123,6 +159,14 @@ export default function SymptomSelection() {
           );
         })}
       </div>
+
+      {filteredSymptoms.length === 0 && (
+        <Card className="mb-8">
+          <CardContent className="py-6 text-center text-sm text-muted-foreground">
+            No symptoms match your search. Try a different keyword.
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex justify-between items-center">
         <p className="text-xs text-muted-foreground">

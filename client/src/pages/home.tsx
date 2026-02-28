@@ -1,7 +1,8 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, BookOpen, UserCheck, Shield, Leaf, Activity, ChevronRight, Sparkles } from "lucide-react";
+import { Shield, Leaf, Activity, ChevronRight, Sparkles, Heart } from "lucide-react";
 
 // ========================
 // SECTION 1: LANDING PAGE
@@ -9,6 +10,24 @@ import { Heart, BookOpen, UserCheck, Shield, Leaf, Activity, ChevronRight, Spark
 // ========================
 
 export default function Home() {
+  const quotes = useMemo(
+    () => [
+      "When diet is wrong, medicine is of no use; when diet is correct, medicine is of no need.",
+      "Balance is the perfect state of body, mind, and consciousness.",
+      "The body is the temple of the mind — nourish both with care.",
+      "Health is not just the absence of disease, but harmony within.",
+    ],
+    [],
+  );
+  const [quoteIndex, setQuoteIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setQuoteIndex((prev) => (prev + 1) % quotes.length);
+    }, 9000);
+    return () => window.clearInterval(timer);
+  }, [quotes.length]);
+
   return (
     <div className="min-h-screen">
       {/* Hero Section - Clean gradient with clear hierarchy */}
@@ -38,42 +57,16 @@ export default function Home() {
 
             {/* Primary CTA - Stand out visually */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
-              <Link href="/health-check">
+              <Link href="/patient">
                 <Button
                   size="lg"
                   className="w-full sm:w-auto gap-2 px-8 h-12 text-base font-medium shadow-md"
-                  data-testid="button-self-health-check"
+                  data-testid="button-enter-portal"
                 >
-                  <Heart className="w-5 h-5" />
-                  Start Health Check
+                  Enter Portal
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </Link>
-            </div>
-
-            {/* Secondary CTAs - Subtle styling */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-              <Link href="/body-type">
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto gap-2"
-                  data-testid="button-learn-body-type"
-                >
-                  <BookOpen className="w-4 h-4" />
-                  Learn Your Body Type
-                </Button>
-              </Link>
-
-              <Button
-                variant="ghost"
-                className="w-full sm:w-auto gap-2 text-muted-foreground"
-                disabled
-                data-testid="button-consult-practitioner"
-              >
-                <UserCheck className="w-4 h-4" />
-                Consult Practitioner
-                <span className="text-xs opacity-70">(Coming Soon)</span>
-              </Button>
             </div>
 
             {/* Trust indicator */}
@@ -82,6 +75,19 @@ export default function Home() {
               No login required • Your privacy is protected
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* Daily Wisdom */}
+      <section className="py-10 px-6 bg-emerald-50/60 border-y border-emerald-100">
+        <div className="container mx-auto max-w-3xl text-center">
+          <p className="text-xs uppercase tracking-[0.3em] text-emerald-700/70 mb-3">
+            Daily Wisdom
+          </p>
+          <p className="text-xl md:text-2xl font-serif text-foreground leading-relaxed">
+            “{quotes[quoteIndex]}”
+          </p>
+          <p className="text-xs text-emerald-700/70 mt-3">Ayurvedic Insight</p>
         </div>
       </section>
 
@@ -247,9 +253,9 @@ export default function Home() {
 
           {/* CTA at bottom */}
           <div className="text-center mt-12">
-            <Link href="/health-check">
+            <Link href="/patient">
               <Button size="lg" className="gap-2" data-testid="button-start-now">
-                Start Your Health Check
+                Enter Portal
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </Link>

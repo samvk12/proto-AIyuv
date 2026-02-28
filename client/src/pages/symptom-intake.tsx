@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useSymptomFlow } from "@/context/SymptomFlowContext";
 import { ArrowRight, ArrowLeft, MapPin, User } from "lucide-react";
+import FlowStepper from "@/components/flow-stepper";
 
 const ageOptions = ["18-25", "26-35", "36-45", "46-55", "56-65", "65+"] as const;
 
@@ -31,10 +32,16 @@ export default function SymptomIntake() {
         Back to Dashboard
       </Button>
 
+      <FlowStepper
+        steps={["Intake", "Symptoms", "Assessment", "Results"]}
+        currentStep={0}
+        className="mb-5"
+      />
+
       <Card>
         <CardHeader className="space-y-2">
           <Badge variant="secondary" className="w-fit text-[11px]">
-            Step 1 of 3 • Intake
+            Step 1 of 4 • Intake
           </Badge>
           <CardTitle className="text-xl flex items-center gap-2">
             <User className="w-5 h-5 text-primary" />

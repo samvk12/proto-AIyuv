@@ -43,23 +43,6 @@ function Header() {
         </Link>
         
         {/* Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
-          <Link
-            href="/health-check"
-            className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-            data-testid="link-health-check"
-          >
-            Health Check
-          </Link>
-          <Link
-            href="/body-type"
-            className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
-            data-testid="link-body-type"
-          >
-            Body Types
-          </Link>
-        </nav>
-        
         {/* Theme Toggle */}
         <ThemeToggle />
       </div>
@@ -70,7 +53,8 @@ function Header() {
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={UserSelection} />
+      <Route path="/" component={Home} />
+      <Route path="/portal" component={UserSelection} />
       <Route path="/patient" component={PatientEnter} />
       <Route path="/home" component={Home} />
       <Route path="/health-dashboard" component={HealthDashboard} />

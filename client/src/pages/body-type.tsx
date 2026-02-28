@@ -159,11 +159,12 @@ export default function BodyType() {
           Take our Self Health Check to get personalized insights based on your
           unique mind-body type.
         </p>
-        <Link href="/health-check">
-          <Button size="lg" data-testid="button-start-check">
-            Start Health Check
-          </Button>
-        </Link>
+        <Button size="lg" data-testid="button-start-check" disabled>
+          Start Health Check
+        </Button>
+        <p className="text-xs text-muted-foreground mt-3">
+          Locked • Coming Soon
+        </p>
       </div>
     </div>
   );

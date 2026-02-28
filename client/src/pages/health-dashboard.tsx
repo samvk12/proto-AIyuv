@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, Link } from "wouter";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,8 @@ export default function HealthDashboard() {
     answered: false,
     followedTasksYesterday: null,
   });
+  const preventionRef = useRef<HTMLDivElement | null>(null);
+  const [highlightPrevention, setHighlightPrevention] = useState(false);
 
   useEffect(() => {
     const storedCase = localStorage.getItem("healthCheckCase");
@@ -50,6 +52,17 @@ export default function HealthDashboard() {
         setCheckin({ answered: false, followedTasksYesterday: null });
       }
     }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("focus") === "prevention") {
+      preventionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setHighlightPrevention(true);
+      const timer = window.setTimeout(() => setHighlightPrevention(false), 2200);
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
   }, []);
 
   const handleCheckin = (followed: boolean) => {
@@ -222,7 +235,7 @@ export default function HealthDashboard() {
       )}
 
       {/* Two primary action pillars */}
-      <div className="grid md:grid-cols-2 gap-5 mb-16">
+      <div className="grid md:grid-cols-2 gap-5 mb-16" ref={preventionRef}>
         <Card className="hover-elevate smooth-appear">
           <CardContent className="pt-6 flex flex-col gap-4">
             <div className="flex items-center gap-3">
@@ -247,19 +260,27 @@ export default function HealthDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover-elevate smooth-appear">
+        <Card
+          className={`hover-elevate smooth-appear ${
+            highlightPrevention ? "ring-2 ring-emerald-200 bg-emerald-50/50" : ""
+          }`}
+        >
           <CardContent className="pt-6 flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
                 <Shield className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <h2 className="text-lg font-serif font-bold">Prevention & Care</h2>
                 <p className="text-sm text-muted-foreground">
-                  Understand your body type and get a long-term plan for stress, sleep, exercise, and diet.
+                  Explore your dosha balance (Vata, Pitta, Kapha) and build long-term habits for stress, sleep,
+                  movement, and diet.
                 </p>
               </div>
             </div>
+            <p className="text-xs text-emerald-700/80 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+              Distinct from symptom checking — this focuses on your constitution and prevention plan.
+            </p>
             <div className="flex flex-col sm:flex-row gap-3 mt-2">
               <Link href="/body-type">
                 <Button
